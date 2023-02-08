@@ -22,8 +22,9 @@ The following boards *should* work without any code modification, but have not b
 - Select a name for your workspace when prompted for a workspace name.
 - Click the **New Application** link in the **Quick Panel** (or, use **File** > **New** > **ModusToolbox Application**). This launches the [Project Creator](https://www.cypress.com/ModusToolboxProjectCreator) tool.
 - Pick a kit supported by the code example from the list shown in the **Project Creator - Choose Board Support Package (BSP)** dialog and click **Next**
-- In the **Project Creator - Select Application** dialog, Click the checkbox of the project **Avnet IoTConnect Example** under **Wi-Fi** catergory and then click **Create**. 
-- Modify Avnet_IoTConnect_Example/configs/app_config.h per your IoTConnect device and account info.
+- In the **Project Creator - Select Application** dialog, Click the checkbox of the project **Avnet IoTConnect Basic Example** under **Wi-Fi** catergory and then click **Create**. 
+- Modify **Avnet_IoTConnect_Basic_Example/configs/app_config.h** per your IoTConnect device and account info.
+- Modify **Avnet_IoTConnect_Basic_Example/configs/wifi_config.h** with your WIFI_SSID and WIFI_PASSWORD.
 - At this point you should be able to build and run the application by using the options in the **Quick Panel** on bottom left of the screen.   
 - You should see the application output in your terminal emulator.
 
