@@ -26,15 +26,13 @@ Firmware logs will be available on that COM port.
 ## IoTConnect Template Setup
 
 * Login to the IoTConnect platform, navigate to Devices -> Device -> Templates and click "Create Template."
-  * Enter a name like "xxxxdemo" for **Template Code** and **Template Name**. 
-  * Select *Symmetric Key* or *Self Signed Certificate* in the **Authentication Type** pulldown.
+  * Enter a name like "mtbdemo" for **Template Code** and **Template Name**. 
+  * Select *Self Signed Certificate* or *CA Certificate* in the **Authentication Type** pulldown.
   * Ensure that **Device Message Version** is **1.0**
   * Click **Save**
 * On the same page, click the Attributes tab.
 * You can add some attributes to the list of attributes, for example:
-  * *sensordata*  - "NUMBER"
-  * *temperature* - "NUMBER"
-  * *button*      - "NUMBER"
+  * *cpu*  - "NUMBER"
   * *version*     - "STRING"
 * The screenshot below shows an example template:
 
@@ -47,7 +45,7 @@ Firmware logs will be available on that COM port.
 * Enter your device unique ID.
 * Choose your entity where you will create the device.
 * Select the Template that was created in a previous step.
-* Enter the fingerprint of your certificate if you use **Self Signed Certificate** as the Authentication Type.
+* Enter the [fingerprint of your certificate](#Obtaining-the-Device-Certificate-Fingerprint). 
 * Click **Save**.
 
 <img src="media/iotc-device.png" width="50%" height="50%" />
@@ -57,16 +55,16 @@ Firmware logs will be available on that COM port.
 
 ### Obtaining the Device Certificate Fingerprint
 
-This section outlines how to set up the device for IoTConnect Self Signed Certificate authentication type.
+This section outlines how to set up the device for IoTConnect Self Signed Certificate or CA Certificate authentication type.
 Steps for other authentication types are out of scope for this guide.
 
 * Obtain the fingerprint of device certificate.
    * Generate your certificate in PEM format.
    * The fingerprint of the certificate can be either SHA256 or SHA1.
-   * You can execute ``` openssl x509 -noout -fingerprint -inform pem -in snxXXXX_device.pem ``` if openssl is installed.
-   * The contents of snxXXXX_device.pem can be pasted into an online
+   * You can execute ``` openssl x509 -noout -fingerprint -inform pem -in cert.pem ``` if openssl is installed.
+   * The contents of *cert.pem* can be pasted into an online fingerprint calculator such as [this one](https://www.samltool.com/fingerprint.php). 
+
   
-Fingerprint calculator such as [this one](https://www.samltool.com/fingerprint.php). 
 Note that publishing the device certificate or fingerprint online is not technically unsafe 
 because the certificate must be paired by the private key derived data during authentication. 
 The private key is securely stored on the device and cannot be accessed even programmatically.
