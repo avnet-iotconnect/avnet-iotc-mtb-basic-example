@@ -19,4 +19,4 @@ The following boards *should* work without any code modification, but have not b
 
 ## Instructions
 
-Please refer to the [QUICKSTART_DEMO](https://github.com/avnet-iotconnect/iotc-azurertos-sdk/blob/main/samples/wfi32iot/QUICKSTART_DEMO.md) document.
+Please refer to the [QUICKSTART_DEMO](https://github.com/avnet-iotconnect/iotc-modustoolbox-example/blob/main/QUICKSTART_DEMO.md) document.
