@@ -63,7 +63,82 @@
 #include "app_config.h"
 #include "app_task.h"
 
+
+#include "cy_log.h"
+
+/* OTA API */
+#include "cy_ota_api.h"
+#include "ota_serial_flash.h"
+
+/* App specific configuration */
+#include "ota_app_config.h"
+
 #define APP_VERSION "01.00.00"
+
+/* MAX connection retries to join WI-FI AP */
+#define MAX_CONNECTION_RETRIES              (10u)
+
+/* Wait between connection retries */
+#define WIFI_CONN_RETRY_DELAY_MS            (500)
+/*******************************************************************************
+* Forward declaration
+********************************************************************************/
+
+cy_ota_callback_results_t ota_callback(cy_ota_cb_struct_t *cb_data);
+void print_heap_usage(char *msg);
+
+
+/*******************************************************************************
+* Global Variables
+********************************************************************************/
+/* OTA context */
+cy_ota_context_ptr ota_context;
+volatile static bool otaFlag = false;
+
+/* Network parameters for OTA */
+cy_ota_network_params_t ota_network_params =
+{
+    .http =
+    {
+        .server =
+        {
+            .host_name = HTTP_SERVER,
+            .port = HTTP_SERVER_PORT
+        },
+        .file = OTA_HTTP_JOB_FILE,
+    #if (ENABLE_TLS == true)
+        .credentials =
+        {
+            .root_ca = ROOT_CA_CERTIFICATE,
+            .root_ca_size = sizeof(ROOT_CA_CERTIFICATE),
+        #if (USING_CLIENT_CERTIFICATE == true)
+            .client_cert = CLIENT_CERTIFICATE,
+            .client_cert_size = sizeof(CLIENT_CERTIFICATE),
+        #endif
+        #if (USING_CLIENT_KEY == true)
+            .private_key = CLIENT_KEY,
+            .private_key_size = sizeof(CLIENT_KEY),
+        #endif
+        },
+    #endif
+    },
+    .use_get_job_flow = CY_OTA_DIRECT_FLOW,
+#if (ENABLE_TLS == true)
+    .initial_connection = CY_OTA_CONNECTION_HTTPS,
+#else
+    .initial_connection = CY_OTA_CONNECTION_HTTP
+#endif
+};
+
+/* Parameters for OTA agent */
+cy_ota_agent_params_t ota_agent_params =
+{
+    .cb_func = ota_callback,
+    .cb_arg = &ota_context,
+    .reboot_upon_completion = 1,
+    .validate_after_reboot = 1,
+    .do_not_send_result = 1
+};
 
 /* Macro to check if the result of an operation was successful and set the
  * corresponding bit in the status_flag based on 'init_mask' parameter. When
@@ -84,67 +159,198 @@
                          }                                     \
                      } while(0)
 
-/******************************************************************************
- * Function Name: wifi_connect
- ******************************************************************************
+
+
+/*******************************************************************************
+ * Function Name: ota_callback()
+ *******************************************************************************
  * Summary:
- *  Function that initiates connection to the Wi-Fi Access Point using the
- *  specified SSID and PASSWORD. The connection is retried a maximum of
- *  'MAX_WIFI_CONN_RETRIES' times with interval of 'WIFI_CONN_RETRY_INTERVAL_MS'
- *  milliseconds.
- *
- * Parameters:
- *  void
+ *  Prints the status of the OTA agent on every event. This callback is optional,
+ *  but be aware that the OTA middleware will not print the status of OTA agent
+ *  on its own.
  *
  * Return:
- *  cy_rslt_t : CY_RSLT_SUCCESS upon a successful Wi-Fi connection, else an
- *              error code indicating the failure.
+ *  CY_OTA_CB_RSLT_OTA_CONTINUE - OTA Agent to continue with function.
+ *  CY_OTA_CB_RSLT_OTA_STOP     - OTA Agent to End current update session.
+ *  CY_OTA_CB_RSLT_APP_SUCCESS  - Application completed task, success.
+ *  CY_OTA_CB_RSLT_APP_FAILED   - Application completed task, failure.
  *
- ******************************************************************************/
-static cy_rslt_t wifi_connect(void) {
-    cy_rslt_t result = CY_RSLT_SUCCESS;
-    cy_wcm_connect_params_t connect_param;
-    cy_wcm_ip_address_t ip_address;
+ *******************************************************************************/
+cy_ota_callback_results_t ota_callback(cy_ota_cb_struct_t *cb_data)
+{
+    cy_ota_callback_results_t   cb_result = CY_OTA_CB_RSLT_OTA_CONTINUE;
+    const char                  *state_string;
+    const char                  *error_string;
 
-    /* Check if Wi-Fi connection is already established. */
-    if (cy_wcm_is_connected_to_ap() == 0) {
-        /* Configure the connection parameters for the Wi-Fi interface. */
-        memset(&connect_param, 0, sizeof(cy_wcm_connect_params_t));
-        memcpy(connect_param.ap_credentials.SSID, WIFI_SSID, sizeof(WIFI_SSID));
-        memcpy(connect_param.ap_credentials.password, WIFI_PASSWORD, sizeof(WIFI_PASSWORD));
-        connect_param.ap_credentials.security = WIFI_SECURITY;
-
-        printf("Connecting to Wi-Fi AP '%s'\n", connect_param.ap_credentials.SSID);
-
-        /* Connect to the Wi-Fi AP. */
-        for (uint32_t retry_count = 0; retry_count < MAX_WIFI_CONN_RETRIES; retry_count++) {
-            result = cy_wcm_connect_ap(&connect_param, &ip_address);
-
-            if (result == CY_RSLT_SUCCESS) {
-                printf("\nSuccessfully connected to Wi-Fi network '%s'.\n", connect_param.ap_credentials.SSID);
-
-                /* Set the appropriate bit in the status_flag to denote
-                 * successful Wi-Fi connection, print the assigned IP address.
-                 */
-                if (ip_address.version == CY_WCM_IP_VER_V4) {
-                    printf("IPv4 Address Assigned: %s\n", ip4addr_ntoa((const ip4_addr_t*) &ip_address.ip.v4));
-                } else if (ip_address.version == CY_WCM_IP_VER_V6) {
-                    printf("IPv6 Address Assigned: %s\n", ip6addr_ntoa((const ip6_addr_t*) &ip_address.ip.v6));
-                }
-                return result;
-            }
-
-            printf("Connection to Wi-Fi network failed with error code 0x%0X. Retrying in %d ms. Retries left: %d\n",
-                    (int) result, WIFI_CONN_RETRY_INTERVAL_MS, (int) (MAX_WIFI_CONN_RETRIES - retry_count - 1));
-            vTaskDelay(pdMS_TO_TICKS(WIFI_CONN_RETRY_INTERVAL_MS));
-        }
-
-        printf("\nExceeded maximum Wi-Fi connection attempts!\n");
-        printf("Wi-Fi connection failed after retrying for %d mins\n",
-                (int) ((WIFI_CONN_RETRY_INTERVAL_MS * MAX_WIFI_CONN_RETRIES) / 60000u));
+    if (cb_data == NULL)
+    {
+        return CY_OTA_CB_RSLT_OTA_STOP;
     }
-    return result;
+
+    state_string  = cy_ota_get_state_string(cb_data->ota_agt_state);
+    error_string  = cy_ota_get_error_string(cy_ota_get_last_error());
+
+    print_heap_usage("In OTA Callback");
+
+    switch (cb_data->reason)
+    {
+
+        case CY_OTA_LAST_REASON:
+            break;
+
+        case CY_OTA_REASON_SUCCESS:
+            printf(">> APP CB OTA SUCCESS state:%d %s last_error:%s\n\n",
+                    cb_data->ota_agt_state,
+                    state_string, error_string);
+            break;
+
+        case CY_OTA_REASON_FAILURE:
+            printf(">> APP CB OTA FAILURE state:%d %s last_error:%s\n\n",
+                    cb_data->ota_agt_state, state_string, error_string);
+            break;
+
+        case CY_OTA_REASON_STATE_CHANGE:
+            switch (cb_data->ota_agt_state)
+            {
+                case CY_OTA_STATE_NOT_INITIALIZED:
+                case CY_OTA_STATE_EXITING:
+                case CY_OTA_STATE_INITIALIZING:
+                case CY_OTA_STATE_AGENT_STARTED:
+                case CY_OTA_STATE_AGENT_WAITING:
+                    break;
+
+                case CY_OTA_STATE_START_UPDATE:
+                    printf("APP CB OTA STATE CHANGE CY_OTA_STATE_START_UPDATE\n");
+                    break;
+
+                case CY_OTA_STATE_JOB_CONNECT:
+                    printf("APP CB OTA CONNECT FOR JOB using ");
+                    /* NOTE:
+                     *  HTTP - json_doc holds the HTTP "GET" request
+                     */
+                    if ((cb_data->broker_server.host_name == NULL) ||
+                        ( cb_data->broker_server.port == 0) ||
+                        ( strlen(cb_data->file) == 0) )
+                    {
+                        printf("ERROR in callback data: HTTP: server: %p port: %d topic: '%p'\n",
+                                cb_data->broker_server.host_name,
+                                cb_data->broker_server.port,
+                                cb_data->file);
+                        cb_result = CY_OTA_CB_RSLT_OTA_STOP;
+                    }
+                    printf("HTTP: server:%s port: %d file: '%s'\n",
+                            cb_data->broker_server.host_name,
+                            cb_data->broker_server.port,
+                            cb_data->file);
+
+                    break;
+
+                case CY_OTA_STATE_JOB_DOWNLOAD:
+                    printf("APP CB OTA JOB DOWNLOAD using ");
+                    /* NOTE:
+                     *  HTTP - json_doc holds the HTTP "GET" request
+                     */
+                    printf("HTTP: '%s'\n", cb_data->file);
+                    break;
+
+                case CY_OTA_STATE_JOB_DISCONNECT:
+                    printf("APP CB OTA JOB DISCONNECT\n");
+                    break;
+
+                case CY_OTA_STATE_JOB_PARSE:
+                    printf("APP CB OTA PARSE JOB: '%.*s' \n",
+                    strlen(cb_data->json_doc),
+                    cb_data->json_doc);
+                    break;
+
+                case CY_OTA_STATE_JOB_REDIRECT:
+                    printf("APP CB OTA JOB REDIRECT\n");
+                    break;
+
+                case CY_OTA_STATE_DATA_CONNECT:
+                    printf("APP CB OTA CONNECT FOR DATA using ");
+                    printf("HTTP: %s:%d \n", cb_data->broker_server.host_name,
+                    cb_data->broker_server.port);
+                    break;
+
+                case CY_OTA_STATE_DATA_DOWNLOAD:
+                    printf("APP CB OTA DATA DOWNLOAD using ");
+                    /* NOTE:
+                     *  HTTP - json_doc holds the HTTP "GET" request
+                     */
+                    printf("HTTP: '%.*s' ", strlen(cb_data->json_doc), cb_data->json_doc);
+                    printf("File: '%s'\n\n", cb_data->file);
+                    break;
+
+                case CY_OTA_STATE_DATA_DISCONNECT:
+                    printf("APP CB OTA DATA DISCONNECT\n");
+                    break;
+
+                case CY_OTA_STATE_RESULT_CONNECT:
+                    printf("APP CB OTA SEND RESULT CONNECT using ");
+                    /* NOTE:
+                     *  HTTP - json_doc holds the HTTP "GET" request
+                     */
+                    printf("HTTP: Server:%s port: %d\n",
+                            cb_data->broker_server.host_name,
+                            cb_data->broker_server.port);
+                    break;
+
+                case CY_OTA_STATE_RESULT_SEND:
+                    printf("APP CB OTA SENDING RESULT using ");
+                    /* NOTE:
+                     *  HTTP - json_doc holds the HTTP "PUT"
+                     */
+                    printf("HTTP: '%s' \n", cb_data->json_doc);
+                    break;
+
+                case CY_OTA_STATE_RESULT_RESPONSE:
+                    printf("APP CB OTA Got Result response\n");
+                    break;
+
+                case CY_OTA_STATE_RESULT_DISCONNECT:
+                    printf("APP CB OTA Result Disconnect\n");
+                    break;
+
+                case CY_OTA_STATE_OTA_COMPLETE:
+                    printf("APP CB OTA Session Complete\n");
+                    break;
+
+                case CY_OTA_STATE_STORAGE_OPEN:
+                    printf("APP CB OTA STORAGE OPEN\n");
+                    break;
+
+                case CY_OTA_STATE_STORAGE_WRITE:
+                    printf("APP CB OTA STORAGE WRITE %ld%% (%ld of %ld)\n",
+                            (unsigned long)cb_data->percentage,
+                            (unsigned long)cb_data->bytes_written,
+                            (unsigned long)cb_data->total_size);
+
+                    /* Move cursor to previous line */
+                    printf("\x1b[1F");
+                    break;
+
+                case CY_OTA_STATE_STORAGE_CLOSE:
+                    printf("APP CB OTA STORAGE CLOSE\n");
+                    break;
+
+                case CY_OTA_STATE_VERIFY:
+                    printf("APP CB OTA VERIFY\n");
+                    break;
+
+                case CY_OTA_STATE_RESULT_REDIRECT:
+                    printf("APP CB OTA RESULT REDIRECT\n");
+                    break;
+
+                case CY_OTA_NUM_STATES:
+                    break;
+            }   /* switch state */
+            break;
+    }
+
+    return cb_result;
 }
+
 
 static void publish_telemetry() {
     IotclMessageHandle msg = iotcl_telemetry_create();
@@ -162,36 +368,154 @@ static void publish_telemetry() {
     iotcl_destroy_serialized(str);
 }
 
-void app_task(void *pvParameters) {
+static bool spliturl(const char *url, char **host_name, char**resource) {
+    int host_name_start = 0;
+    size_t url_len = strlen(url);
 
-    /* Structures that store the data to be sent/received to/from various
-     * message queues.
-     */
-
-    /* Configure the Wi-Fi interface as a Wi-Fi STA (i.e. Client). */
-    cy_wcm_config_t config = { .interface = CY_WCM_INTERFACE_TYPE_STA };
-
-    /* To avoid compiler warnings */
-    (void) pvParameters;
-
-    /* Create a message queue to communicate with other tasks and callbacks. */
-    //mqtt_task_q = xQueueCreate(MQTT_TASK_QUEUE_LENGTH, sizeof(mqtt_task_cmd_t));
-    /* Initialize the Wi-Fi Connection Manager and jump to the cleanup block
-     * upon failure.
-     */
-    if (CY_RSLT_SUCCESS != cy_wcm_init(&config)) {
-        printf("Error: Wi-Fi Connection Manager initialization failed!\n");
-        goto exit_cleanup;
+    if (!host_name || !resource) {
+        printf("split_url: Invalid usage\r\n");
+        return false;
     }
 
-    /* Set the appropriate bit in the status_flag to denote successful
-     * WCM initialization.
-     */
-    printf("Wi-Fi Connection Manager initialized.\n");
+    *host_name = NULL;
+    *resource = NULL;
+    int slash_count = 0;
+    for (size_t i = 0; i < url_len; i++) {
+        if (url[i] == '/') {
+            slash_count++;
+            if (slash_count == 2) {
+                host_name_start = i + 1;
+            } else if (slash_count == 3) {
+                const size_t slash_start = i;
+                const size_t host_name_len = i - host_name_start;
+                const size_t resource_len = url_len - i;
+                *host_name = malloc(host_name_len + 1); //+1 for null
+                if (NULL == *host_name) {
+                    return false;
+                }
+                memcpy(*host_name, &url[host_name_start], host_name_len);
+                (*host_name)[host_name_len] = 0; // terminate the string
 
-    /* Initiate connection to the Wi-Fi AP and cleanup if the operation fails. */
-    if (CY_RSLT_SUCCESS != wifi_connect()) {
-        goto exit_cleanup;
+                *resource = malloc(resource_len + 1); //+1 for null
+                if (NULL == *resource) {
+                    free(*host_name);
+                    return false;
+                }
+                memcpy(*resource, &url[slash_start], resource_len);
+                (*resource)[resource_len] = 0; // terminate the string
+
+                return true;
+            }
+        }
+    }
+    return false; // URL could not be parsed
+}
+
+
+
+void start_ota(IotclEventData data)
+{
+	otaFlag = true;
+
+	char *otahost;
+	char *otapath;
+	char **host = &otahost;
+	char **path = &otapath;
+
+    char *url = iotcl_clone_download_url(data, 0);
+//    printf("\r\nURL is %s\r\n", url);
+
+    bool status = spliturl(url, host, path);
+    if (!status) {
+        printf("start_ota: Error while splitting the URL, code: 0x%x\r\n", status);
+    }
+    printf("\r\nHOST is %s\r\nPATH is %s\r\n", otahost, otapath);
+
+    ota_network_params.http.file = otapath;
+    printf("\r\nHTTP FILE is %s\r\n", ota_network_params.http.file);
+
+//    free(host);
+//    free(path);
+    if( cy_ota_agent_start(&ota_network_params, &ota_agent_params, &ota_context) != CY_RSLT_SUCCESS )
+    {
+        printf("\n Initializing and starting the OTA agent failed.\n");
+        CY_ASSERT(0);
+    }
+}
+
+cy_rslt_t connect_to_wifi_ap(void)
+{
+    cy_wcm_config_t wifi_config = { .interface = CY_WCM_INTERFACE_TYPE_STA};
+    cy_wcm_connect_params_t wifi_conn_param;
+    cy_wcm_ip_address_t ip_address;
+    cy_rslt_t result;
+
+    /* Variable to track the number of connection retries to the Wi-Fi AP specified
+     * by WIFI_SSID macro. */
+    uint32_t conn_retries = 0;
+
+    /* Initialize Wi-Fi connection manager. */
+    cy_wcm_init(&wifi_config);
+
+     /* Set the Wi-Fi SSID, password and security type. */
+    memset(&wifi_conn_param, 0, sizeof(cy_wcm_connect_params_t));
+    memcpy(wifi_conn_param.ap_credentials.SSID, WIFI_SSID, sizeof(WIFI_SSID));
+    memcpy(wifi_conn_param.ap_credentials.password, WIFI_PASSWORD, sizeof(WIFI_PASSWORD));
+    wifi_conn_param.ap_credentials.security = WIFI_SECURITY;
+
+    /* Connect to the Wi-Fi AP */
+    for(conn_retries = 0; conn_retries < MAX_CONNECTION_RETRIES; conn_retries++)
+    {
+        result = cy_wcm_connect_ap( &wifi_conn_param, &ip_address );
+
+        if (result == CY_RSLT_SUCCESS)
+        {
+            printf( "Successfully connected to Wi-Fi network '%s'.\n",
+                    wifi_conn_param.ap_credentials.SSID);
+            return result;
+        }
+
+        printf( "Connection to Wi-Fi network failed with error code %d."
+                "Retrying in %d ms...\n", (int) result, WIFI_CONN_RETRY_DELAY_MS );
+        vTaskDelay(pdMS_TO_TICKS(WIFI_CONN_RETRY_DELAY_MS));
+    }
+
+    printf( "Exceeded maximum Wi-Fi connection attempts\n" );
+
+    return result;
+}
+
+void app_task(void *pvParameters) {
+
+    /* default for OTA logging to NOTiCE */
+//    cy_ota_set_log_level(CY_LOG_WARNING);
+
+#if defined(OTA_USE_EXTERNAL_FLASH)
+    /* We need to init from every ext flash write
+     * See ota_serial_flash.h
+     */
+
+    /* initialize SMIF interface */
+    printf("call ota_smif_initialize()\n");
+    if (ota_smif_initialize() != CY_RSLT_SUCCESS)
+    {
+        printf("ERROR returned from ota_smif_initialize()!!!!!\n");
+    }
+#endif /* OTA_USE_EXTERNAL_FLASH */
+
+	printf("APPLICATION VERSION is v%d.%d.%d\r\n", APP_VERSION_MAJOR, APP_VERSION_MINOR, APP_VERSION_BUILD);
+
+    /* Validate the update so we do not revert */
+    if(cy_ota_storage_validated() != CY_RSLT_SUCCESS)
+    {
+        printf("\n Failed to validate the update.\n");
+    }
+
+    /* Connect to Wi-Fi AP */
+    if( connect_to_wifi_ap() != CY_RSLT_SUCCESS )
+    {
+        printf("\n Failed to connect to Wi-FI AP.\n");
+        CY_ASSERT(0);
     }
 
     if (0 != iotc_mtb_time_obtain(IOTCONNECT_SNTP_SERVER)) {
@@ -211,7 +535,7 @@ void app_task(void *pvParameters) {
             iotc_config->auth.data.cert_info.device_cert = IOTCONNECT_DEVICE_CERT;
             iotc_config->auth.data.cert_info.device_key = IOTCONNECT_DEVICE_KEY;
         }
-
+        iotc_config->ota_cb = start_ota;
 
         cy_rslt_t ret = iotconnect_sdk_init();
         if (CY_RSLT_SUCCESS != ret) {
@@ -219,14 +543,18 @@ void app_task(void *pvParameters) {
             goto exit_cleanup;
         }
 
-        for (int j = 0; iotconnect_sdk_is_connected() && j < 3; j++) {
-            publish_telemetry();
-            vTaskDelay(pdMS_TO_TICKS(10000));
+        for (int i = 0; iotconnect_sdk_is_connected() && i < 100; i++)
+        {
+        	if(otaFlag == true){
+                goto exit_cleanup;
+        	}
+        	publish_telemetry();
+        	vTaskDelay(pdMS_TO_TICKS(10000));
         }
-
         iotconnect_sdk_disconnect();
     }
     exit_cleanup: printf("\nAppTask Done.\nTerminating the AppTask...\n");
     vTaskDelete(NULL);
 
 }
+

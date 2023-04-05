@@ -50,6 +50,7 @@
 #include "app_task.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "cy_log.h"
 
 #include "app_task.h"
 
@@ -75,6 +76,7 @@ volatile int uxTopUsedPriority;
  ******************************************************************************/
 int main() {
     cy_rslt_t result;
+    cyhal_wdt_t wdt_obj;
 
     /* This enables RTOS aware debugging in OpenOCD. */
     uxTopUsedPriority = configMAX_PRIORITIES - 1;
@@ -83,21 +85,31 @@ int main() {
     result = cybsp_init();
     CY_ASSERT(CY_RSLT_SUCCESS == result);
 
+    /* Initialize retarget-io to use the debug UART port. */
+    cy_retarget_io_init(CYBSP_DEBUG_UART_TX, CYBSP_DEBUG_UART_RX,
+    CY_RETARGET_IO_BAUDRATE);
+
     /* To avoid compiler warnings. */
     (void) result;
 
     /* Enable global interrupts. */
     __enable_irq();
 
-    /* Initialize retarget-io to use the debug UART port. */
-    cy_retarget_io_init(CYBSP_DEBUG_UART_TX, CYBSP_DEBUG_UART_RX,
-    CY_RETARGET_IO_BAUDRATE);
+    /* default for all logging to WARNING */
+    cy_log_init(CY_LOG_WARNING, NULL, NULL);
+
 
     /* \x1b[2J\x1b[;H - ANSI ESC sequence to clear screen. */
     printf("\x1b[2J\x1b[;H");
     printf("===============================================================\n");
     printf("Starting The App Task\n");
     printf("===============================================================\n\n");
+
+    /* Clear watchdog timer so that it doesn't trigger a reset */
+    cyhal_wdt_init(&wdt_obj, cyhal_wdt_get_max_timeout_ms());
+    cyhal_wdt_free(&wdt_obj);
+
+    printf("\nWatchdog timer started by the bootloader is now turned off!!!\n\n");
 
     /* Create the MQTT Client task. */
     xTaskCreate(app_task, "App Task", APP_TASK_STACK_SIZE,
