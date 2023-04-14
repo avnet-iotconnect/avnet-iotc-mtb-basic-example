@@ -13,7 +13,7 @@ which is named "USB Serial". Use defaults for 115200 baud: 8 bits, 1 stop bit, n
 Firmware logs will be available on that COM port. 
 
 
-## Software setup
+## Software Setup
 - Download, install and open [ModusToolbox&trade; software](https://www.cypress.com/products/modustoolbox-software-environment) v3.0.0 or later (tested with v3.0.0). On Windows, ensure that you **Run As Adminstrator** the installation package so that the neccessary drivers can be installed.
 - Select a name for your workspace when prompted for a workspace name.
 - Click the **New Application** link in the **Quick Panel** (or, use **File** > **New** > **ModusToolbox Application**). This launches the [Project Creator](https://www.cypress.com/ModusToolboxProjectCreator) tool.
@@ -44,7 +44,7 @@ Firmware logs will be available on that COM port.
 
 * You must first build and program the MCUboot bootloader project into the CM0+ core; this should be done only once. The Avnet basic example app can then be programmed into the CM4 core; you need to only modify this app for all application purposes.
 
-## Import MCU bootloader project for OTA
+## Import MCU Bootloader Project for OTA
 
 The [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-psoc6-mcuboot-basic) code example bundles two applications: the bootloader app that runs on CM0+, and the Blinky app that runs on CM4. For this code example, only the bootloader app is required and the root directory of the bootloader app is referred to as *\<bootloader_cm0p>* in this document.
 
@@ -82,9 +82,9 @@ The [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-ps
     After programming, the bootloader application starts automatically.
 
 
-## Setup Avnet IoTConnect Basic Example for OTA
+## Setup Application for OTA
 
-* Import "ota-update" libaray from **Library Manager** of Modustoolbox.
+* Update OTA HTTP_SERVER, HTTP_SERVER_PORT and ROOT_CA_CERTIFICATE in the file (/source/ota_app_config.h).
 * Update the "CY_OTA_CHUNK_SIZE" to 0x6000 in the lib file(mtb-shared/ota-udpate/tag/include/cy_ota_api.h).
 * Update the chunk buffer to "uint8_t chunk_buffer[CY_OTA_CHUNK_SIZE + 1024]" in the lib file(mtb-shared/ota-udpate/tag/source/cy_ota_internal.h).
 
@@ -115,7 +115,7 @@ The [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-ps
 
 <img src="media/iotc-device.png" width="50%" height="50%" />
 
-## Setting up firmware on IoTConnect for OTA
+## Setting up Firmware on IoTConnect for OTA
 
 * Navigate to Device -> Device, click **Firmware** on the bottom panal.
 * Upload the .bin format OTA firmware under your template and click **Save**.
