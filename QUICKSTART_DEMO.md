@@ -11,7 +11,7 @@ for connecting to Avnet's IoTConnect Platform. Supported boards are listed in th
 which is named "USB Serial". Use defaults for 115200 baud: 8 bits, 1 stop bit, no flow control or parity. 
 Firmware logs will be available on that COM port. 
 
-## Load the prebuild firmware onto the board
+## Program the prebuild Firmware
 * Download the [Cypress Programmer](https://softwaretools.infineon.com/tools/com.ifx.tb.tool.cypressprogrammer?_ga=2.62648364.1833039610.1681757143-213784066.1663170031).
 * Download the prebuild [Bootloader]() and [Application]() firmware. Program the bootloader first and then the application firmware.
 * Launch the programmer software, **Open** the hex firwmare on the top left and Click **Connect**.
