@@ -27,64 +27,59 @@ Firmware logs will be available on that COM port.
 
 **Note**: OTA only works with the board [PSoC&trade; 6 Wi-Fi Bluetooth&reg; prototyping kit](https://www.infineon.com/CY8CPROTO-062-4343W) (`CY8CPROTO-062-4343W`).
 
-## Project Structure for OTA
-
-* For OTA, we will need a dual-core project, where the **MCUboot bootloader** app runs on the CM0+ core and the **Avnet_IoTConnect_Basic_Example** app runs on the CM4 core.
-
-* The bootloader project and Avnet_IoTConnect_Basic_Example project should be built and programmed independently. They must be placed separately in the workspace as you would do for any other two independent projects. An example workspace will be as follows:
-
-   ```
-   <project-explorer>
-      |
-      |-<mtb-example-psoc6-mcuboot-basic>
-      |-<mtb-shared>
-      |-<Avnet-IoTConnect-Basic-example>
-      |
-   ```
-
-* You must first build and program the MCUboot bootloader project into the CM0+ core; this should be done only once. The Avnet basic example app can then be programmed into the CM4 core; you need to only modify this app for all application purposes.
 
 ## Import MCU Bootloader Project for OTA
 
-The [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-psoc6-mcuboot-basic) code example bundles two applications: the bootloader app that runs on CM0+, and the Blinky app that runs on CM4. For this code example, only the bootloader app is required and the root directory of the bootloader app is referred to as *\<bootloader_cm0p>* in this document.
+The [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-psoc6-mcuboot-basic) code example bundles two applications: the bootloader app that runs on CM0+, and the Blinky app that runs on CM4. For this code example, only the bootloader app is required and the root directory of the bootloader app is referred to as *\<MCUboot-Based_Basic_Bootloader/ bootloader_cm0p>* in this document.
 
-* Import the [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-psoc6-mcuboot-basic) code example per the instructions in the [Using the code example](https://github.com/Infineon/mtb-example-psoc6-mcuboot-basic#using-the-code-example) section of its [README](https://github.com/Infineon/mtb-example-psoc6-mcuboot-basic/blob/master/README.md).
+* Import the [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-psoc6-mcuboot-basic) code example. 
+  * Open **New Application** on the bottom left panel in Modustoolbox.
+  * Select the your board in the pop-up window, then Click **Next**.
+  * Select the application **MCUboot-Based_Basic_Bootloader**, then **Create**.
+  * After successfully importing the bootloader project, the workspace will be as below.
 
-* The bootloader and Avnet basic example applications must have the same understanding of the memory layout. The memory layout is defined through JSON files. The ota-update library provides a set of predefined JSON files that can be readily used. Both the bootloader and Avnet application must use the same JSON file.
+    <img src="media/project.png"/>
 
-   The *\<mtb_shared>/ota-update/\<tag>/configs/flashmap/* folder contains the pre-defined flashmap JSON files. The following files are supported by this example.
+  
+* Project structure explanation:
 
-   Target      | Supported JSON files
-   ----------- |----------------------------------
-   CY8CPROTO-062-4343W <br> | Board supports the following flashmaps : <br> *psoc62_2m_ext_overwrite_single.json* <br> *psoc62_2m_ext_swap_single.json* <br> 
+  * The bootloader project and Avnet_IoTConnect_Basic_Example project should be built and programmed independently. They must be placed separately in the same workspace.
+  * You must first build and program the MCUboot bootloader project into the CM0+ core; this should be done only once. The Avnet basic example app can then be programmed into the CM4 core; you need to only modify this app for all application purposes.
+  * The bootloader and Avnet basic example applications must have the same understanding of the memory layout. The memory layout is defined through JSON files. The ota-update library provides a set of predefined JSON files that can be readily used. Both the bootloader and Avnet application must use the same JSON file.
 
 
+* Setup the MCU bootloader project:
+  * The *\<mtb_shared>/ota-update/\<tag>/configs/flashmap/* folder contains the pre-defined flashmap JSON files. The following file is supported by this example.
+
+     Target      | Supported JSON files
+     ----------- |----------------------------------
+     CY8CPROTO-062-4343W <br> | Board supports the following flashmaps : <br> *psoc62_2m_ext_swap_single.json* <br> 
+  
    <br>
 
-   Copy the required flashmap JSON file and paste it in the *\<bootloader_cm0p>/flashmap* folder.
+  * Copy the flashmap **psoc62_2m_ext_swap_single.json** and paste it in the *\<bootloader_cm0p>/flashmap* folder.
 
-* Modify the value of the `FLASH_MAP` variable in  *\<bootloader_cm0p>/shared_config.mk* to the selected JSON file name from the previous step.
+  * Modify the value of the `FLASH_MAP` variable in  *\<bootloader_cm0p>/shared_config.mk* to the selected JSON file name from the previous step.
 
-* Copy the *\<mtb_shared>/mcuboot/\<tag>/boot/cypress/MCUBootApp/config* folder and paste it into the *\<bootloader_cm0p>* folder.
+  * Copy the *\<mtb_shared>/mcuboot/\<tag>/boot/cypress/MCUBootApp/config* folder and paste it into the *\<bootloader_cm0p>* folder.
 
-* Edit the *\<bootloader_cm0p>/config/mcuboot_config/mcuboot_config.h* file and comment out the following defines to skip checking the image signature:
+  * Edit the *\<bootloader_cm0p>/config/mcuboot_config/mcuboot_config.h* file and comment out the following defines to skip checking the image signature:
 
-   ```
-   #define MCUBOOT_SIGN_EC256
-   .
-   #define MCUBOOT_VALIDATE_PRIMARY_SLOT
-   ```
+     ```
+     //#define MCUBOOT_SIGN_EC256
+     .
+     //#define MCUBOOT_VALIDATE_PRIMARY_SLOT
+     ```
 
-* Edit *\<bootloader_cm0p>/app.mk* and replace the MCUboot include `$(MCUBOOTAPP_PATH)/config` with `./config`. This gets the build system to find the new copy of the *config* directory that you pasted into the *\<bootloader_cm0p>* directory, instead of the default one supplied by the library.
+  * Edit *\<bootloader_cm0p>/app.mk* and replace the MCUboot include `$(MCUBOOTAPP_PATH)/config` with `./config`. This gets the build system to find the new copy of the *config* directory that you pasted into the *\<bootloader_cm0p>* directory, instead of the default one supplied by the library.
 
-* Build and program the application per the [Step-by-step](https://github.com/Infineon/mtb-example-psoc6-mcuboot-basic#step-by-step-instructions) instructions in its [README](https://github.com/Infineon/mtb-example-psoc6-mcuboot-basic/blob/master/README.md).
+  * Build and program the application per the [Step-by-step](https://github.com/Infineon/mtb-example-psoc6-mcuboot-basic#step-by-step-instructions) instructions in its [README](https://github.com/Infineon/mtb-example-psoc6-mcuboot-basic/blob/master/README.md).
 
-    After programming, the bootloader application starts automatically.
+      After programming, the bootloader application starts automatically.
 
 
-## Setup Application for OTA
+## Update Application for OTA
 
-* Update OTA HTTP_SERVER, HTTP_SERVER_PORT and ROOT_CA_CERTIFICATE in the file (/source/ota_app_config.h).
 * Update the "CY_OTA_CHUNK_SIZE" to 0x6000 in the lib file(mtb-shared/ota-udpate/tag/include/cy_ota_api.h).
 * Update the chunk buffer to "uint8_t chunk_buffer[CY_OTA_CHUNK_SIZE + 1024]" in the lib file(mtb-shared/ota-udpate/tag/source/cy_ota_internal.h).
 
@@ -101,7 +96,7 @@ The [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-ps
   * *version*     - "STRING"
 * The screenshot below shows an example template:
 
-<img src="media/template.png" width="50%" height="50%" />
+<img src="media/template.png"/>
 
 
 ## Setting up the Device on IoTConnect
@@ -113,7 +108,7 @@ The [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-ps
 * Enter the [fingerprint of your certificate](#Obtaining-the-Device-Certificate-Fingerprint). 
 * Click **Save**.
 
-<img src="media/iotc-device.png" width="50%" height="50%" />
+<img src="media/iotc-device.png" />
 
 ## Setting up Firmware on IoTConnect for OTA
 
@@ -124,9 +119,9 @@ The [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-ps
 * After a successful OTA, the board will restart itself and boot the new image as the log below.
 ```
 APP CB OTA Session Complete
-[F5] : [L2] : 0154 00:05:58.280 cy_ota_complete()   RESETTING NOW !!!! This takes a few minutes.
+[F5] : [L2] : 0154 00:05:58.280 cy_ota_complete()
 ```
-<img src="media/ota.png" width="50%" height="50%" />
+<img src="media/ota.png" />
 
 ## Appendix
 
@@ -148,4 +143,4 @@ The private key is securely stored on the device and cannot be accessed even pro
 The only information that may potentially "leak" by using a public web site in this fashion is the informational 
 manufacturer data, including the device serial number. Below is a sample screenshot:
 
-<img src="media/fingerprint.png" width="50%" height="50%" />
+<img src="media/fingerprint.png" />
