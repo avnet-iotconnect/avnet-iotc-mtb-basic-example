@@ -34,12 +34,11 @@ The [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-ps
 
 * Import the [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-psoc6-mcuboot-basic) code example. 
   * Open **New Application** on the bottom left panel in Modustoolbox.
-  * Select the your board in the pop-up window, then Click **Next**.
+  * Select your board in the pop-up window, then Click **Next**.
   * Select the application **MCUboot-Based_Basic_Bootloader**, then **Create**.
-  * After successfully importing the bootloader project, the workspace will be as below.
-
-    <img src="media/project.png"/>
-
+  * After successfully importing the bootloader project, the workspace will be as below:
+  
+    ![Project Explorer Screenshot](media/project.png "Project Explorer Screenshot")
   
 * Project structure explanation:
 
@@ -49,7 +48,7 @@ The [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-ps
 
 
 * Setup the MCU bootloader project:
-  * The *\<mtb_shared>/ota-update/\<tag>/configs/flashmap/* folder contains the pre-defined flashmap JSON files. The following file is supported by this example.
+  * The *\<mtb_shared>/iotc-modustoolbox-sdk/\<tag>/ota-update//configs/flashmap/* folder contains the pre-defined flashmap JSON files. The following file is supported by this example.
 
      Target      | Supported JSON files
      ----------- |----------------------------------
@@ -73,15 +72,13 @@ The [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-ps
 
   * Edit *\<bootloader_cm0p>/app.mk* and replace the MCUboot include `$(MCUBOOTAPP_PATH)/config` with `./config`. This gets the build system to find the new copy of the *config* directory that you pasted into the *\<bootloader_cm0p>* directory, instead of the default one supplied by the library.
 
-  * Build and program the application per the [Step-by-step](https://github.com/Infineon/mtb-example-psoc6-mcuboot-basic#step-by-step-instructions) instructions in its [README](https://github.com/Infineon/mtb-example-psoc6-mcuboot-basic/blob/master/README.md).
-
-      After programming, the bootloader application starts automatically.
+  * Build and program the application. After programming, the bootloader application starts automatically.
 
 
-## Update Application for OTA
+## Update Library for OTA
 
-* Update the "CY_OTA_CHUNK_SIZE" to 0x6000 in the lib file(mtb-shared/ota-udpate/tag/include/cy_ota_api.h).
-* Update the chunk buffer to "uint8_t chunk_buffer[CY_OTA_CHUNK_SIZE + 1024]" in the lib file(mtb-shared/ota-udpate/tag/source/cy_ota_internal.h).
+* Update the "CY_OTA_CHUNK_SIZE" to 0x6000 in the lib file(mtb-shared/iotc-modustoolbox-sdk/\<tag>/ota-udpate/include/cy_ota_api.h).
+* Update the chunk buffer to "uint8_t chunk_buffer[CY_OTA_CHUNK_SIZE + 1024]" in the lib file(mtb-shared/iotc-modustoolbox-sdk/\<tag>/ota-udpate/source/cy_ota_internal.h).
 
 ## IoTConnect Template Setup
 
@@ -96,8 +93,7 @@ The [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-ps
   * *version*     - "STRING"
 * The screenshot below shows an example template:
 
-<img src="media/template.png"/>
-
+ ![Template Screenshot](media/template.png "Template Screenshot")
 
 ## Setting up the Device on IoTConnect
  
@@ -108,7 +104,7 @@ The [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-ps
 * Enter the [fingerprint of your certificate](#Obtaining-the-Device-Certificate-Fingerprint). 
 * Click **Save**.
 
-<img src="media/iotc-device.png" />
+ ![iotc-device](media/iotc-device.png "iotc-device Screenshot")
 
 ## Setting up Firmware on IoTConnect for OTA
 
@@ -121,7 +117,8 @@ The [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-ps
 APP CB OTA Session Complete
 [F5] : [L2] : 0154 00:05:58.280 cy_ota_complete()
 ```
-<img src="media/ota.png" />
+
+ ![ota Page Screenshot](media/ota.png "ota Page Screenshot")
 
 ## Appendix
 
@@ -143,4 +140,4 @@ The private key is securely stored on the device and cannot be accessed even pro
 The only information that may potentially "leak" by using a public web site in this fashion is the informational 
 manufacturer data, including the device serial number. Below is a sample screenshot:
 
-<img src="media/fingerprint.png" />
+ ![Fingerprint Screenshot](media/fingerprint.png "Fingerprint Screenshot")

@@ -19,4 +19,5 @@ Firmware logs will be available on that COM port.
 * If successful, the log will show up on the terminal program.
 * For the re-building the firmware, please refer to [DEVELOPER_GUIDE](https://github.com/avnet-iotconnect/iotc-modustoolbox-example/blob/main/DEVELOPER_GUIDE.md).
 
-<img src="media/programmer.png" width="50%" height="50%" />
+
+  ![Programmer Screenshot](media/programmer.png "Programmer Screenshot")
