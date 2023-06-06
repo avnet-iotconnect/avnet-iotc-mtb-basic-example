@@ -8,7 +8,7 @@
 
 #include "iotconnect.h"
 
-#define IOTCONNECT_CPID "your-cpidd"
+#define IOTCONNECT_CPID "your-cpid"
 #define IOTCONNECT_ENV  "your-environment"
 
 // Device Unique ID
@@ -20,16 +20,15 @@
 // PEM format certificate and private key, if using X509 type auth.
 // For example:
 #define IOTCONNECT_DEVICE_CERT \
-"-----BEGIN CERTIFICATE-----\n"\
-"...\n"\
+"-----BEGIN CERTIFICATE-----\n" \
 "-----END CERTIFICATE-----"
 
 #define IOTCONNECT_DEVICE_KEY \
-"-----BEGIN RSA PRIVATE KEY-----\n"\
-"...\n"\
+"-----BEGIN RSA PRIVATE KEY-----\n" \
 "-----END RSA PRIVATE KEY-----"
 
 // you can choose to use your own NTP server to obtain network time, or simply time.google.com for better stability
 #define IOTCONNECT_SNTP_SERVER "pool.ntp.org"
+
 
 #endif // APP_CONFIG_H

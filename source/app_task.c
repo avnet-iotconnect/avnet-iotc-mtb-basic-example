@@ -62,8 +62,30 @@
 
 #include "app_config.h"
 #include "app_task.h"
+#include "iotc_ota.h"
+
 
 #define APP_VERSION "01.00.00"
+
+/* MAX connection retries to join WI-FI AP */
+#define MAX_CONNECTION_RETRIES              (10u)
+
+/* Wait between connection retries */
+#define WIFI_CONN_RETRY_DELAY_MS            (500)
+/*******************************************************************************
+* Forward declaration
+********************************************************************************/
+static void publish_telemetry(void);
+static void on_ota(IotclEventData data);
+cy_rslt_t connect_to_wifi_ap(void);
+static bool spliturl(const char *url, char **host_name, char**resource);
+
+/*******************************************************************************
+* Global Variables
+********************************************************************************/
+/* OTA context */
+volatile static bool otaFlag = false;
+
 
 /* Macro to check if the result of an operation was successful and set the
  * corresponding bit in the status_flag based on 'init_mask' parameter. When
@@ -84,114 +106,23 @@
                          }                                     \
                      } while(0)
 
-/******************************************************************************
- * Function Name: wifi_connect
- ******************************************************************************
- * Summary:
- *  Function that initiates connection to the Wi-Fi Access Point using the
- *  specified SSID and PASSWORD. The connection is retried a maximum of
- *  'MAX_WIFI_CONN_RETRIES' times with interval of 'WIFI_CONN_RETRY_INTERVAL_MS'
- *  milliseconds.
- *
- * Parameters:
- *  void
- *
- * Return:
- *  cy_rslt_t : CY_RSLT_SUCCESS upon a successful Wi-Fi connection, else an
- *              error code indicating the failure.
- *
- ******************************************************************************/
-static cy_rslt_t wifi_connect(void) {
-    cy_rslt_t result = CY_RSLT_SUCCESS;
-    cy_wcm_connect_params_t connect_param;
-    cy_wcm_ip_address_t ip_address;
 
-    /* Check if Wi-Fi connection is already established. */
-    if (cy_wcm_is_connected_to_ap() == 0) {
-        /* Configure the connection parameters for the Wi-Fi interface. */
-        memset(&connect_param, 0, sizeof(cy_wcm_connect_params_t));
-        memcpy(connect_param.ap_credentials.SSID, WIFI_SSID, sizeof(WIFI_SSID));
-        memcpy(connect_param.ap_credentials.password, WIFI_PASSWORD, sizeof(WIFI_PASSWORD));
-        connect_param.ap_credentials.security = WIFI_SECURITY;
-
-        printf("Connecting to Wi-Fi AP '%s'\n", connect_param.ap_credentials.SSID);
-
-        /* Connect to the Wi-Fi AP. */
-        for (uint32_t retry_count = 0; retry_count < MAX_WIFI_CONN_RETRIES; retry_count++) {
-            result = cy_wcm_connect_ap(&connect_param, &ip_address);
-
-            if (result == CY_RSLT_SUCCESS) {
-                printf("\nSuccessfully connected to Wi-Fi network '%s'.\n", connect_param.ap_credentials.SSID);
-
-                /* Set the appropriate bit in the status_flag to denote
-                 * successful Wi-Fi connection, print the assigned IP address.
-                 */
-                if (ip_address.version == CY_WCM_IP_VER_V4) {
-                    printf("IPv4 Address Assigned: %s\n", ip4addr_ntoa((const ip4_addr_t*) &ip_address.ip.v4));
-                } else if (ip_address.version == CY_WCM_IP_VER_V6) {
-                    printf("IPv6 Address Assigned: %s\n", ip6addr_ntoa((const ip6_addr_t*) &ip_address.ip.v6));
-                }
-                return result;
-            }
-
-            printf("Connection to Wi-Fi network failed with error code 0x%0X. Retrying in %d ms. Retries left: %d\n",
-                    (int) result, WIFI_CONN_RETRY_INTERVAL_MS, (int) (MAX_WIFI_CONN_RETRIES - retry_count - 1));
-            vTaskDelay(pdMS_TO_TICKS(WIFI_CONN_RETRY_INTERVAL_MS));
-        }
-
-        printf("\nExceeded maximum Wi-Fi connection attempts!\n");
-        printf("Wi-Fi connection failed after retrying for %d mins\n",
-                (int) ((WIFI_CONN_RETRY_INTERVAL_MS * MAX_WIFI_CONN_RETRIES) / 60000u));
-    }
-    return result;
-}
-
-static void publish_telemetry() {
-    IotclMessageHandle msg = iotcl_telemetry_create();
-
-    // Optional. The first time you create a data point, the current timestamp will be automatically added
-    // TelemetryAddWith* calls are only required if sending multiple data points in one packet.
-    iotcl_telemetry_add_with_iso_time(msg, iotcl_iso_timestamp_now());
-    iotcl_telemetry_set_string(msg, "version", APP_VERSION);
-    iotcl_telemetry_set_number(msg, "cpu", 3.123); // test floating point numbers
-
-    const char *str = iotcl_create_serialized_string(msg, false);
-    iotcl_telemetry_destroy(msg);
-    printf("Sending: %s\n", str);
-    iotconnect_sdk_send_packet(str); // underlying code will report an error
-    iotcl_destroy_serialized(str);
-}
 
 void app_task(void *pvParameters) {
 
-    /* Structures that store the data to be sent/received to/from various
-     * message queues.
-     */
+#if defined(OTA_USE_EXTERNAL_FLASH)
+    /* We need to init external flash */
+	ota_smif_init();
+#endif /* OTA_USE_EXTERNAL_FLASH */
 
-    /* Configure the Wi-Fi interface as a Wi-Fi STA (i.e. Client). */
-    cy_wcm_config_t config = { .interface = CY_WCM_INTERFACE_TYPE_STA };
+    /* Validate the update */
+	ota_storage_validate();
 
-    /* To avoid compiler warnings */
-    (void) pvParameters;
-
-    /* Create a message queue to communicate with other tasks and callbacks. */
-    //mqtt_task_q = xQueueCreate(MQTT_TASK_QUEUE_LENGTH, sizeof(mqtt_task_cmd_t));
-    /* Initialize the Wi-Fi Connection Manager and jump to the cleanup block
-     * upon failure.
-     */
-    if (CY_RSLT_SUCCESS != cy_wcm_init(&config)) {
-        printf("Error: Wi-Fi Connection Manager initialization failed!\n");
-        goto exit_cleanup;
-    }
-
-    /* Set the appropriate bit in the status_flag to denote successful
-     * WCM initialization.
-     */
-    printf("Wi-Fi Connection Manager initialized.\n");
-
-    /* Initiate connection to the Wi-Fi AP and cleanup if the operation fails. */
-    if (CY_RSLT_SUCCESS != wifi_connect()) {
-        goto exit_cleanup;
+    /* Connect to Wi-Fi AP */
+    if( connect_to_wifi_ap() != CY_RSLT_SUCCESS )
+    {
+        printf("\n Failed to connect to Wi-FI AP.\n");
+        CY_ASSERT(0);
     }
 
     if (0 != iotc_mtb_time_obtain(IOTCONNECT_SNTP_SERVER)) {
@@ -211,7 +142,7 @@ void app_task(void *pvParameters) {
             iotc_config->auth.data.cert_info.device_cert = IOTCONNECT_DEVICE_CERT;
             iotc_config->auth.data.cert_info.device_key = IOTCONNECT_DEVICE_KEY;
         }
-
+        iotc_config->ota_cb = on_ota;
 
         cy_rslt_t ret = iotconnect_sdk_init();
         if (CY_RSLT_SUCCESS != ret) {
@@ -219,14 +150,151 @@ void app_task(void *pvParameters) {
             goto exit_cleanup;
         }
 
-        for (int j = 0; iotconnect_sdk_is_connected() && j < 3; j++) {
-            publish_telemetry();
-            vTaskDelay(pdMS_TO_TICKS(10000));
+        for (int i = 0; iotconnect_sdk_is_connected() && i < 100; i++)
+        {
+        	if(otaFlag == true){
+                goto exit_cleanup;
+        	}
+        	publish_telemetry();
+        	vTaskDelay(pdMS_TO_TICKS(10000));
         }
-
         iotconnect_sdk_disconnect();
     }
     exit_cleanup: printf("\nAppTask Done.\nTerminating the AppTask...\n");
     vTaskDelete(NULL);
 
+}
+
+static void publish_telemetry() {
+    IotclMessageHandle msg = iotcl_telemetry_create();
+
+    // Optional. The first time you create a data point, the current timestamp will be automatically added
+    // TelemetryAddWith* calls are only required if sending multiple data points in one packet.
+    iotcl_telemetry_add_with_iso_time(msg, iotcl_iso_timestamp_now());
+    iotcl_telemetry_set_string(msg, "version", APP_VERSION);
+    iotcl_telemetry_set_number(msg, "cpu", 3.123); // test floating point numbers
+
+    const char *str = iotcl_create_serialized_string(msg, false);
+    iotcl_telemetry_destroy(msg);
+    printf("Sending: %s\n", str);
+    iotconnect_sdk_send_packet(str); // underlying code will report an error
+    iotcl_destroy_serialized(str);
+}
+
+
+static void on_ota(IotclEventData data)
+{
+	char *otahost;
+	char *otapath;
+	char **host = &otahost;
+	char **path = &otapath;
+
+    char *url = iotcl_clone_download_url(data, 0);
+    if (url == NULL){
+    	printf("Download URL is invalid.\r\n");
+    	return;
+    }
+
+    bool status = spliturl(url, host, path);
+    if (!status) {
+        printf("start_ota: Error while splitting the URL, code: 0x%x\r\n", status);
+    }
+    else {
+    	printf("\nHOST is %s.\n\nPATH is %s.\r\n", otahost, otapath);
+
+        /* Start the OTA task */
+        if(start_ota(otahost, otapath)){
+        	printf("OTA starts successfully.\r\n");
+        	otaFlag = true;
+        }
+        else {
+        	printf("OTA starts unsuccessfully.\r\n");
+        	otaFlag = false;
+        }
+    }
+}
+
+cy_rslt_t connect_to_wifi_ap(void)
+{
+    cy_wcm_config_t wifi_config = { .interface = CY_WCM_INTERFACE_TYPE_STA};
+    cy_wcm_connect_params_t wifi_conn_param;
+    cy_wcm_ip_address_t ip_address;
+    cy_rslt_t result;
+
+    /* Variable to track the number of connection retries to the Wi-Fi AP specified
+     * by WIFI_SSID macro. */
+    uint32_t conn_retries = 0;
+
+    /* Initialize Wi-Fi connection manager. */
+    cy_wcm_init(&wifi_config);
+
+     /* Set the Wi-Fi SSID, password and security type. */
+    memset(&wifi_conn_param, 0, sizeof(cy_wcm_connect_params_t));
+    memcpy(wifi_conn_param.ap_credentials.SSID, WIFI_SSID, sizeof(WIFI_SSID));
+    memcpy(wifi_conn_param.ap_credentials.password, WIFI_PASSWORD, sizeof(WIFI_PASSWORD));
+    wifi_conn_param.ap_credentials.security = WIFI_SECURITY;
+
+    /* Connect to the Wi-Fi AP */
+    for(conn_retries = 0; conn_retries < MAX_CONNECTION_RETRIES; conn_retries++)
+    {
+        result = cy_wcm_connect_ap( &wifi_conn_param, &ip_address );
+
+        if (result == CY_RSLT_SUCCESS)
+        {
+            printf( "Successfully connected to Wi-Fi network '%s'.\n",
+                    wifi_conn_param.ap_credentials.SSID);
+            return result;
+        }
+
+        printf( "Connection to Wi-Fi network failed with error code %d."
+                "Retrying in %d ms...\n", (int) result, WIFI_CONN_RETRY_DELAY_MS );
+        vTaskDelay(pdMS_TO_TICKS(WIFI_CONN_RETRY_DELAY_MS));
+    }
+
+    printf( "Exceeded maximum Wi-Fi connection attempts\n" );
+
+    return result;
+}
+
+static bool spliturl(const char *url, char **host_name, char**resource) {
+    int host_name_start = 0;
+    size_t url_len = strlen(url);
+
+    if (!host_name || !resource) {
+        printf("split_url: Invalid usage\r\n");
+        return false;
+    }
+
+    *host_name = NULL;
+    *resource = NULL;
+    int slash_count = 0;
+    for (size_t i = 0; i < url_len; i++) {
+        if (url[i] == '/') {
+            slash_count++;
+            if (slash_count == 2) {
+                host_name_start = i + 1;
+            } else if (slash_count == 3) {
+                const size_t slash_start = i;
+                const size_t host_name_len = i - host_name_start;
+                const size_t resource_len = url_len - i;
+                *host_name = malloc(host_name_len + 1); //+1 for null
+                if (NULL == *host_name) {
+                    return false;
+                }
+                memcpy(*host_name, &url[host_name_start], host_name_len);
+                (*host_name)[host_name_len] = 0; // terminate the string
+
+                *resource = malloc(resource_len + 1); //+1 for null
+                if (NULL == *resource) {
+                    free(*host_name);
+                    return false;
+                }
+                memcpy(*resource, &url[slash_start], resource_len);
+                (*resource)[resource_len] = 0; // terminate the string
+
+                return true;
+            }
+        }
+    }
+    return false; // URL could not be parsed
 }
