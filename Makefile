@@ -211,7 +211,7 @@ COMPONENTS+=OTA_PSOC_062
 OTA_PLATFORM=PSOC_062_2M
 
 # Only one of the following two if conditions will be true
-OTA_FLASH_MAP=$(SEARCH_iotc-modustoolbox-sdk)/lib/ota-update/configs/flashmap/psoc62_2m_ext_swap_single.json
+OTA_FLASH_MAP=$(SEARCH_avnet-iotc-mtb-sdk)/lib/ota-update/configs/flashmap/psoc62_2m_ext_swap_single.json
 
 # Change the version here or over-ride by setting an environment variable
 # before building the application.
@@ -375,7 +375,7 @@ ifeq ($(OTA_SUPPORT),1)
 
     # Find Linker Script using wildcard
     # Directory within ota-upgrade library
-    LINKER_SCRIPT=$(wildcard $(SEARCH_iotc-modustoolbox-sdk)/lib/ota-update/platforms/$(OTA_PLATFORM)/linker_scripts/COMPONENT_$(CORE)/TOOLCHAIN_$(TOOLCHAIN)/ota/*$(OTA_LINKER_SCRIPT_TYPE).$(CY_TOOLCHAIN_LS_EXT))
+    LINKER_SCRIPT=$(wildcard $(SEARCH_avnet-iotc-mtb-sdk)/lib/ota-update/platforms/$(OTA_PLATFORM)/linker_scripts/COMPONENT_$(CORE)/TOOLCHAIN_$(TOOLCHAIN)/ota/*$(OTA_LINKER_SCRIPT_TYPE).$(CY_TOOLCHAIN_LS_EXT))
                                    
     ###################################################################################################
     # OTA POST BUILD scripting
@@ -392,12 +392,12 @@ ifeq ($(OTA_SUPPORT),1)
     APP_BUILD_VERSION=$(OTA_APP_VERSION_MAJOR).$(OTA_APP_VERSION_MINOR).$(OTA_APP_VERSION_BUILD)
     
     # MCUBoot flash support location
-    MCUBOOT_DIR=$(SEARCH_iotc-modustoolbox-sdk)/lib/ota-update/source/port_support/mcuboot
+    MCUBOOT_DIR=$(SEARCH_avnet-iotc-mtb-sdk)/lib/ota-update/source/port_support/mcuboot
     IMGTOOL_SCRIPT_NAME=imgtool/imgtool.py
     MCUBOOT_SCRIPT_FILE_DIR=$(MCUBOOT_DIR)
     MCUBOOT_KEY_DIR=$(MCUBOOT_DIR)/keys
     MCUBOOT_KEY_FILE=cypress-test-ec-p256.pem
-    SIGN_SCRIPT_FILE_PATH=$(SEARCH_iotc-modustoolbox-sdk)/lib/ota-update/scripts/sign_script.bash
+    SIGN_SCRIPT_FILE_PATH=$(SEARCH_avnet-iotc-mtb-sdk)/lib/ota-update/scripts/sign_script.bash
     
     # Signing is disabled by default
     # Use "create" for PSoC 062 instead of "sign", and no key path (use a space " " for keypath to keep batch happy)
@@ -490,8 +490,8 @@ ifeq ($(OTA_SUPPORT),1)
     ifeq ($(CY_PYTHON_PATH),)
         CY_PYTHON_PATH=$(shell which python)
     endif
-        $(info "flashmap.py $(CY_PYTHON_PATH) $(SEARCH_iotc-modustoolbox-sdk)/lib/ota-update/scripts/$(FLASHMAP_PYTHON_SCRIPT) -p $(FLASHMAP_PLATFORM) -i $(OTA_FLASH_MAP) > flashmap.mk")
-        $(shell $(CY_PYTHON_PATH) $(SEARCH_iotc-modustoolbox-sdk)/lib/ota-update/scripts/$(FLASHMAP_PYTHON_SCRIPT) -p $(FLASHMAP_PLATFORM) -i $(OTA_FLASH_MAP) > flashmap.mk)
+        $(info "flashmap.py $(CY_PYTHON_PATH) $(SEARCH_avnet-iotc-mtb-sdk)/lib/ota-update/scripts/$(FLASHMAP_PYTHON_SCRIPT) -p $(FLASHMAP_PLATFORM) -i $(OTA_FLASH_MAP) > flashmap.mk")
+        $(shell $(CY_PYTHON_PATH) $(SEARCH_avnet-iotc-mtb-sdk)/lib/ota-update/scripts/$(FLASHMAP_PYTHON_SCRIPT) -p $(FLASHMAP_PLATFORM) -i $(OTA_FLASH_MAP) > flashmap.mk)
         flash_map_status=$(shell if [ -s "flashmap.mk" ]; then echo "success"; fi )
         ifeq ($(flash_map_status),)
             $(info "")
