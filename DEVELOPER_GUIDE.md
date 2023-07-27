@@ -21,6 +21,7 @@ Firmware logs will be available on that COM port.
 - In the **Project Creator - Select Application** dialog, Click the checkbox of the project **Avnet IoTConnect Basic Example** under **Wi-Fi** catergory and then click **Create**. 
 - Modify **Avnet_IoTConnect_Basic_Example/configs/app_config.h** per your IoTConnect device and account & security info.
 - Modify **Avnet_IoTConnect_Basic_Example/configs/wifi_config.h** with your WIFI_SSID and WIFI_PASSWORD.
+- Modify **mtb_shared/avnet-iotc-mtb-sdk/tag/source/iotc_mqtt_client.c**. Remove/comment out *#include "cy_lwip.h"*.
 - At this point you should be able to build and run the application by using the options in the **Quick Panel** on bottom left of the screen.   
 - You should see the application output in your terminal emulator.
 - if OTA is not required, you can jump to the topic [IoTConnect Template Setup](https://github.com/avnet-iotconnect/iotc-modustoolbox-example/blob/main/QUICKSTART_DEMO.md#iotconnect-template-setup)

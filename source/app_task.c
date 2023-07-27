@@ -112,11 +112,11 @@ void app_task(void *pvParameters) {
 
 #if defined(OTA_USE_EXTERNAL_FLASH)
     /* We need to init external flash */
-	ota_smif_init();
+	iotc_ota_init();
 #endif /* OTA_USE_EXTERNAL_FLASH */
 
     /* Validate the update */
-	ota_storage_validate();
+	iotc_ota_storage_validated();
 
     /* Connect to Wi-Fi AP */
     if( connect_to_wifi_ap() != CY_RSLT_SUCCESS )
@@ -203,7 +203,7 @@ static void on_ota(IotclEventData data)
     	printf("\nHOST is %s.\n\nPATH is %s.\r\n", otahost, otapath);
 
         /* Start the OTA task */
-        if(start_ota(otahost, otapath)){
+        if(iotc_ota_start(otahost, otapath, NULL)){
         	printf("OTA starts successfully.\r\n");
         	otaFlag = true;
         }
