@@ -110,13 +110,13 @@ volatile static bool otaFlag = false;
 
 void app_task(void *pvParameters) {
 
-#if defined(OTA_USE_EXTERNAL_FLASH)
+#if defined(OTA_SUPPORT) && defined(OTA_USE_EXTERNAL_FLASH)
     /* We need to init external flash */
 	iotc_ota_init();
-#endif /* OTA_USE_EXTERNAL_FLASH */
 
     /* Validate the update */
 	iotc_ota_storage_validated();
+#endif /* OTA_USE_EXTERNAL_FLASH */
 
     /* Connect to Wi-Fi AP */
     if( connect_to_wifi_ap() != CY_RSLT_SUCCESS )
@@ -202,6 +202,7 @@ static void on_ota(IotclEventData data)
     else {
     	printf("\nHOST is %s.\n\nPATH is %s.\r\n", otahost, otapath);
 
+#ifdef OTA_SUPPORT
         /* Start the OTA task */
         if(iotc_ota_start(otahost, otapath, NULL)){
         	printf("OTA starts successfully.\r\n");
@@ -211,7 +212,9 @@ static void on_ota(IotclEventData data)
         	printf("OTA starts unsuccessfully.\r\n");
         	otaFlag = false;
         }
+#endif
     }
+
 }
 
 cy_rslt_t connect_to_wifi_ap(void)
