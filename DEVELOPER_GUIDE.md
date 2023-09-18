@@ -14,9 +14,9 @@ Firmware logs will be available on that COM port.
 
 
 ## Software Setup
-- Download, install and open [ModusToolbox&trade; software](https://www.cypress.com/products/modustoolbox-software-environment) v3.0.0 or later (tested with v3.0.0). On Windows, ensure that you **Run As Adminstrator** the installation package so that the neccessary drivers can be installed.
+- Download, install and open [ModusToolbox&trade; software](https://www.infineon.com/cms/en/design-support/tools/sdk/modustoolbox-software/) v3.0.0 or later (tested with v3.0.0). On Windows, ensure that you **Run As Adminstrator** the installation package so that the neccessary drivers can be installed.
 - Select a name for your workspace when prompted for a workspace name.
-- Click the **New Application** link in the **Quick Panel** (or, use **File** > **New** > **ModusToolbox Application**). This launches the [Project Creator](https://www.cypress.com/ModusToolboxProjectCreator) tool.
+- Click the **New Application** link in the **Quick Panel** (or, use **File** > **New** > **ModusToolbox Application**). This launches the [Project Creator](https://www.infineon.com/dgdl/Infineon-ModusToolbox_Project_Creator_2.0_User_Guide-UserManual-v01_00-EN.pdf) tool.
 - Pick a kit supported by the code example from the list shown in the **Project Creator - Choose Board Support Package (BSP)** dialog and click **Next**
 - In the **Project Creator - Select Application** dialog, Click the checkbox of the project **Avnet IoTConnect Basic Example** under **Wi-Fi** catergory and then click **Create**. 
 - Modify **Avnet_IoTConnect_Basic_Example/configs/app_config.h** per your IoTConnect device and account & security info.
@@ -24,7 +24,7 @@ Firmware logs will be available on that COM port.
 - Modify **mtb_shared/avnet-iotc-mtb-sdk/tag/source/iotc_mqtt_client.c**. Remove/comment out *#include "cy_lwip.h"*.
 - At this point you should be able to build and run the application by using the options in the **Quick Panel** on bottom left of the screen.   
 - You should see the application output in your terminal emulator.
-- if OTA is not required, you can jump to the topic [IoTConnect Template Setup](https://github.com/avnet-iotconnect/iotc-modustoolbox-example/blob/main/QUICKSTART_DEMO.md#iotconnect-template-setup)
+- if OTA is not required, you can jump to the topic [IoTConnect Template Setup](https://github.com/avnet-iotconnect/avnet-iotc-mtb-basic-example/edit/main/DEVELOPER_GUIDE.md#iotconnect-template-setup)
 
 **Note**: OTA only works with the board [PSoC&trade; 6 Wi-Fi Bluetooth&reg; prototyping kit](https://www.infineon.com/CY8CPROTO-062-4343W) (`CY8CPROTO-062-4343W`).
 
