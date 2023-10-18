@@ -49,7 +49,6 @@
 #include "cy_retarget_io.h"
 //#include "cy_wcm.h"
 //#include "cy_lwip.h"
-
 //#include "clock.h"
 
 /* LwIP header files */
@@ -75,7 +74,7 @@
 /*******************************************************************************
 * Forward declaration
 ********************************************************************************/
-static void publish_telemetry(void);
+static cy_rslt_t publish_telemetry(void);
 static void on_ota(IotclEventData data);
 cy_rslt_t connect_to_wifi_ap(void);
 static bool spliturl(const char *url, char **host_name, char**resource);
@@ -150,12 +149,15 @@ void app_task(void *pvParameters) {
             goto exit_cleanup;
         }
 
-        for (int i = 0; iotconnect_sdk_is_connected() && i < 100; i++)
+        for (int i = 0; iotconnect_sdk_is_connected() && i < 10; i++)
         {
         	if(otaFlag == true){
                 goto exit_cleanup;
         	}
-        	publish_telemetry();
+            cy_rslt_t result = publish_telemetry();
+        	if (result != CY_RSLT_SUCCESS) {
+        		break;
+        	}
         	vTaskDelay(pdMS_TO_TICKS(10000));
         }
         iotconnect_sdk_disconnect();
@@ -165,7 +167,7 @@ void app_task(void *pvParameters) {
 
 }
 
-static void publish_telemetry() {
+static cy_rslt_t publish_telemetry() {
     IotclMessageHandle msg = iotcl_telemetry_create();
 
     // Optional. The first time you create a data point, the current timestamp will be automatically added
@@ -177,8 +179,9 @@ static void publish_telemetry() {
     const char *str = iotcl_create_serialized_string(msg, false);
     iotcl_telemetry_destroy(msg);
     printf("Sending: %s\n", str);
-    iotconnect_sdk_send_packet(str); // underlying code will report an error
+    cy_rslt_t result = iotconnect_sdk_send_packet(str); // underlying code will report an error
     iotcl_destroy_serialized(str);
+	return result;
 }
 
 
