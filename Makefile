@@ -122,7 +122,7 @@ DEFINES+=HTTP_DO_NOT_USE_CUSTOM_CONFIG
 # for sntp
 DEFINES+=SNTP_SERVER_DNS
 # for OTA
-DEFINES+=OTA_SUPPORT
+#DEFINES+=OTA_SUPPORT
 
 # Configure response header maximum length with the specified value - HTTP
 DEFINES += HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES=2048
@@ -196,7 +196,7 @@ POSTBUILD=
 
 # Set to 1 to add OTA defines, sources, and libraries (must be used with MCUBoot)
 # NOTE: Extra code must be called from your app to initialize the OTA middleware.
-OTA_SUPPORT=1
+OTA_SUPPORT=0
 
 # HTTP Support
 OTA_HTTP_SUPPORT=1
