@@ -1,5 +1,5 @@
 /******************************************************************************
-* File Name:   wifi_config.h
+* File Name: wifi_config.h
 *
 * Description: This file contains the configuration macros required for the
 *              Wi-Fi connection.
@@ -8,7 +8,7 @@
 *
 *
 *******************************************************************************
-* Copyright 2020-2021, Cypress Semiconductor Corporation (an Infineon company) or
+* Copyright 2020-2023, Cypress Semiconductor Corporation (an Infineon company) or
 * an affiliate of Cypress Semiconductor Corporation.  All rights reserved.
 *
 * This software, including source code, documentation and related
@@ -49,10 +49,10 @@
 * Macros
 ********************************************************************************/
 /* SSID of the Wi-Fi Access Point to which the MQTT client connects. */
-#define WIFI_SSID                         "your-wifi-ssid"
+#define WIFI_SSID                         ""
 
 /* Passkey of the above mentioned Wi-Fi SSID. */
-#define WIFI_PASSWORD                     "your-wifi-password"
+#define WIFI_PASSWORD                     ""
 
 /* Security type of the Wi-Fi access point. See 'cy_wcm_security_t' structure
  * in "cy_wcm.h" for more details.
