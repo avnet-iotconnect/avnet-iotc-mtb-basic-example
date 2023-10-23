@@ -46,7 +46,7 @@ TARGET=APP_CY8CKIT-062-WIFI-BT
 #
 # If APPNAME is edited, ensure to update or regenerate launch
 # configurations for your IDE.
-APPNAME=mtb-example-wifi-mqtt-client
+APPNAME=basic-example
 
 # Name of toolchain to use. Options include:
 #
