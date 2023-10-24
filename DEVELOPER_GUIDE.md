@@ -21,12 +21,13 @@ Firmware logs will be available on that COM port.
 - In the **Project Creator - Select Application** dialog, Click the checkbox of the project **Avnet IoTConnect Basic Example** under **Wi-Fi** catergory and then click **Create**. 
 - Modify **Avnet_IoTConnect_Basic_Example/configs/app_config.h** per your IoTConnect device and account & security info.
 - Modify **Avnet_IoTConnect_Basic_Example/configs/wifi_config.h** with your WIFI_SSID and WIFI_PASSWORD.
-- Modify **mtb_shared/avnet-iotc-mtb-sdk/tag/source/iotc_mqtt_client.c**. Remove/comment out *#include "cy_lwip.h"*.
 - At this point you should be able to build and run the application by using the options in the **Quick Panel** on bottom left of the screen.   
 - You should see the application output in your terminal emulator.
-- if OTA is not required, you can jump to the topic [IoTConnect Template Setup](https://github.com/avnet-iotconnect/avnet-iotc-mtb-basic-example/edit/main/DEVELOPER_GUIDE.md#iotconnect-template-setup)
+- if OTA is NOT required, you can jump to the topic [IoTConnect Template Setup](https://github.com/avnet-iotconnect/avnet-iotc-mtb-basic-example/edit/main/DEVELOPER_GUIDE.md#iotconnect-template-setup)
 
-**Note**: OTA only works with the board [PSoC&trade; 6 Wi-Fi Bluetooth&reg; prototyping kit](https://www.infineon.com/CY8CPROTO-062-4343W) (`CY8CPROTO-062-4343W`).
+**Note**: OTA only works with the boards below:
+- [PSoC&trade; 6 Wi-Fi Bluetooth&reg; prototyping kit](https://www.infineon.com/CY8CPROTO-062-4343W) (`CY8CPROTO-062-4343W`)
+- [PSoC&trade; 62S2 Wi-Fi Bluetooth&reg; pioneer kit](https://www.infineon.com/cms/en/product/evaluation-boards/cy8ckit-062s2-43012/) (`CY8CKIT-062S2-43012`)
 
 
 ## Import MCU Bootloader Project for OTA
@@ -76,8 +77,10 @@ The [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-ps
   * Build and program the application. After programming, the bootloader application starts automatically.
 
 
-## Update Library for OTA
+## Update Files/Flags for OTA
 
+* Comment out "$(SEARCH_avnet-iotc-mtb-sdk)/lib/ota-update" in .cyignore file.
+* Uncomment "DEFINES+=OTA_SUPPORT" and change "OTA_SUPPORT=0" to "OTA_SUPPORT=1" in makefile.
 * Update the "CY_OTA_CHUNK_SIZE" to 0x6000 in the lib file(mtb-shared/iotc-modustoolbox-sdk/\<tag>/ota-udpate/include/cy_ota_api.h).
 * Update the chunk buffer to "uint8_t chunk_buffer[CY_OTA_CHUNK_SIZE + 1024]" in the lib file(mtb-shared/iotc-modustoolbox-sdk/\<tag>/ota-udpate/source/cy_ota_internal.h).
 
