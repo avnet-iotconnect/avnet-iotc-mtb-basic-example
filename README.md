@@ -18,5 +18,4 @@ The following boards *should* work without any code modification, but have not b
 - [PSoC&trade; 62S3 Wi-Fi Bluetooth&reg; prototyping kit](https://www.infineon.com/cms/en/product/evaluation-boards/cy8cproto-062s3-4343w/) (`CY8CPROTO-062S3-4343W`)
 
 ## Instructions
-* Please refer to [DEVELOPER_GUIDE](https://github.com/avnet-iotconnect/iotc-modustoolbox-example/blob/main/DEVELOPER_GUIDE.md) documents.
-proto2.1
+* Please refer to [DEVELOPER_GUIDE](https://github.com/avnet-iotconnect/iotc-modustoolbox-example/blob/main/DEVELOPER_GUIDE.md) documents..
