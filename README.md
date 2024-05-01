@@ -19,3 +19,4 @@ The following boards *should* work without any code modification, but have not b
 
 ## Instructions
 * Please refer to [DEVELOPER_GUIDE](https://github.com/avnet-iotconnect/iotc-modustoolbox-example/blob/main/DEVELOPER_GUIDE.md) documents.
+proto2.1
