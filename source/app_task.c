@@ -64,7 +64,7 @@
 static bool is_demo_mode = false;
 
 #ifdef OTA_SUPPORT
-static bool otaflag = false;
+static bool is_ota_in_progress = false;
 #endif
 
 
@@ -173,11 +173,11 @@ static void on_ota(IotclC2dEventData data) {
         /* Start the OTA task */
         if(iotc_ota_start(otahost, otapath, NULL)){
         	printf("OTA starts successfully.\r\n");
-        	otaflag = true;
+        	is_ota_in_progress = true;
         }
         else {
         	printf("OTA starts unsuccessfully.\r\n");
-        	otaflag = false;
+        	is_ota_in_progress = false;
         }
 #endif
 }
@@ -364,7 +364,7 @@ void app_task(void *pvParameters) {
         int max_messages = is_demo_mode ? 600 : 30; // non-demo = 5 seconds * 10 * 30 = 25 minutes ; demo = 5 seconds * 10 * 600 = 8 hours
         for (int j = 0; iotconnect_sdk_is_connected() && j < max_messages; j++) {
 #ifdef OTA_SUPPORT
-        	if (otaflag == true) {
+        	if (is_ota_in_progress == true) {
                 break;
         	}
 #endif
