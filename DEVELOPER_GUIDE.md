@@ -6,6 +6,10 @@ the [README.md](README.md).
 
 The guide has been tested with the Eclipse option in Project Creator.  
 
+For an example with OTA support, you must use the earlier version of this
+software under the `release-v4.0.0` label, along with ModusToolbox&trade; 3.1.
+and [Local Manifest Setup](DEVELOPER_LOCAL_SETUP.md#local-manifest-setup)
+
 ## Prerequisites
 * PC with Windows. The project is tested with Windows 10, though the setup should work with Linux or Mac as well.
 * USB-A to micro-USB data cable
@@ -129,75 +133,4 @@ provide them in configs/app_config.h formatted specified as a C string #define l
   ```
   The same format needs to be used for the private key as `#define IOTCONNECT_DEVICE_KEY`
 
-## Enabling the OTA Feature
-If you wish to test the OTA feature, you can follow these steps to enable it for your project. 
-
-The OTA feature only works with the boards below:
-- [PSoC&trade; 6 Wi-Fi Bluetooth&reg; prototyping kit](https://www.infineon.com/CY8CPROTO-062-4343W) (`CY8CPROTO-062-4343W`)
-- [PSoC&trade; 62S2 Wi-Fi Bluetooth&reg; pioneer kit](https://www.infineon.com/cms/en/product/evaluation-boards/cy8ckit-062s2-43012/) (`CY8CKIT-062S2-43012`)
-
-The [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-psoc6-mcuboot-basic) code example bundles two applications: the bootloader app that runs on CM0+, and the Blinky app that runs on CM4. For this code example, only the bootloader app is required and the root directory of the bootloader app is referred to as *\<MCUboot-Based_Basic_Bootloader/ bootloader_cm0p>* in this document.
-
-Import the [mtb-example-psoc6-mcuboot-basic](https://github.com/Infineon/mtb-example-psoc6-mcuboot-basic) code example. 
-  * Open **New Application** on the bottom left panel in Modustoolbox.
-  * Select your board in the pop-up window, then Click **Next**.
-  * Select the application **MCUboot-Based_Basic_Bootloader**, then **Create**.
-  * After successfully importing the bootloader project, the workspace will be as below:
-  
-    ![Project Explorer Screenshot](media/project.png "Project Explorer Screenshot")
-  
-* Project structure explanation:
-
-  * The bootloader project and Avnet_IoTConnect_Basic_Example project should be built and programmed independently. They must be placed separately in the same workspace.
-  * You must first build and program the MCUboot bootloader project into the CM0+ core; this should be done only once. The Avnet basic example app can then be programmed into the CM4 core; you need to only modify this app for all application purposes.
-  * The bootloader and Avnet basic example applications must have the same understanding of the memory layout. The memory layout is defined through JSON files. The ota-update library provides a set of predefined JSON files that can be readily used. Both the bootloader and Avnet application must use the same JSON file.
-
-
-* Setup the MCU bootloader project:
-  * The *\<mtb_shared>/iotc-modustoolbox-sdk/\<tag>/ota-update//configs/flashmap/* folder contains the pre-defined flashmap JSON files. The following file is supported by this example.
-
-     Target      | Supported JSON files
-     ----------- |----------------------------------
-     CY8CPROTO-062-4343W <br> | Board supports the following flashmaps : <br> *psoc62_2m_ext_swap_single.json* <br> 
-  
-   <br>
-
-  * Copy the flashmap **psoc62_2m_ext_swap_single.json** and paste it in the *\<bootloader_cm0p>/flashmap* folder.
-
-  * Modify the value of the `FLASH_MAP` variable in  *\<bootloader_cm0p>/shared_config.mk* to `psoc62_2m_ext_swap_single.json`.
-
-  * Copy the *\<mtb_shared>/mcuboot/\<tag>/boot/cypress/MCUBootApp/config* folder and paste it into the *\<bootloader_cm0p>* folder.
-
-  * Edit the *\<bootloader_cm0p>/config/mcuboot_config/mcuboot_config.h* file and comment out the following defines to skip checking the image signature:
-
-     ```
-     //#define MCUBOOT_SIGN_EC256
-     .
-     //#define MCUBOOT_VALIDATE_PRIMARY_SLOT
-     ```
-
-  * Edit *\<bootloader_cm0p>/app.mk* and replace the MCUboot include `$(MCUBOOTAPP_PATH)/config` with `./config`. This gets the build system to find the new copy of the *config* directory that you pasted into the *\<bootloader_cm0p>* directory, instead of the default one supplied by the library.
-
-  * Build and program the application. After programming, the bootloader application starts automatically.
-
-
-#### Update Files/Flags for OTA
-
-* Comment out "$(SEARCH_avnet-iotc-mtb-sdk)/lib/ota-update" in .cyignore file.
-* Uncomment "DEFINES+=OTA_SUPPORT" and change "OTA_SUPPORT=0" to "OTA_SUPPORT=1" in makefile.
-* Update the "CY_OTA_CHUNK_SIZE" to 0x6000 in the lib file(mtb-shared/iotc-modustoolbox-sdk/\<tag>/ota-udpate/include/cy_ota_api.h).
-* Update the chunk buffer to "uint8_t chunk_buffer[CY_OTA_CHUNK_SIZE + 1024]" in the lib file(mtb-shared/iotc-modustoolbox-sdk/\<tag>/ota-udpate/source/cy_ota_internal.h).
-
-#### Setting up Firmware on IoTConnect for OTA
-
-* Navigate to Device -> Device, click **Firmware** on the bottom panel.
-* Upload the .bin format OTA firmware under your template and click **Save**.
-* When pushing OTA update, click *Released* or *Draft* number under your template, the click the first "test OTA" icon as the image shown below.
-* Select your "Device" and "Template", then click **Update** icon to push the OTA update to your board. IoTConnect will send your board the OTA packages and the info will show up on the log. 
-* After a successful OTA, the board will restart itself and boot the new image as the log below.
-```
-APP CB OTA Session Complete
-[F5] : [L2] : 0154 00:05:58.280 cy_ota_complete()
-```
-
- ![ota Page Screenshot](media/ota.png "ota Page Screenshot")
+At this point, the device can be reprogrammed with the newly built firmware.
