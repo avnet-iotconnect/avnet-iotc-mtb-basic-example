@@ -17,6 +17,8 @@ and [Local Manifest Setup](DEVELOPER_LOCAL_SETUP.md#local-manifest-setup)
 * A serial terminal application such as [Tera Term](https://ttssh2.osdn.jp/index.html.en) or a browser-based application like [Google Chrome Labs Serial Terminal](https://googlechromelabs.github.io/serial-terminal/)
 * A registered [myInfineon Account](https://www.infineon.com/sec/login)
 
+For OTA Support, you must use this application with ModusToolbox&trade; 3.1. 
+
 ## Hardware Setup
 * Connect the board to a USB port on your PC. A new USB device should be detected.
 Firmware logs will be available on that COM port.
