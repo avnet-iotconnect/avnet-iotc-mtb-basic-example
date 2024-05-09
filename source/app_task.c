@@ -30,11 +30,10 @@
 * of such system or application assumes all risk of such use and in doing
 * so agrees to indemnify Cypress against all liability.
 *******************************************************************************/
-//
-// Copyright: Avnet 2021
-// Modified by Nik Markovic <nikola.markovic@avnet.com> on 11/11/21.
-//
-
+/* SPDX-License-Identifier: MIT
+ * Copyright (C) 2024 Avnet
+ * Authors: Nikola Markovic <nikola.markovic@avnet.com>, Shu Liu <shu.liu@avnet.com> et al.
+ */
 #include "cyhal.h"
 #include "cybsp.h"
 
@@ -162,7 +161,7 @@ static void on_ota(IotclC2dEventData data) {
     	return;
     }
     const char *otapath = iotcl_c2d_get_ota_url_resource(data, 0);
-    if (otapath == NULL){
+    if (otapath == NULL) {
     	printf("OTA resource is invalid.\r\n");
     	return;
     }
@@ -171,11 +170,10 @@ static void on_ota(IotclC2dEventData data) {
 
 #ifdef OTA_SUPPORT
         /* Start the OTA task */
-        if(iotc_ota_start(otahost, otapath, NULL)){
+        if(iotc_ota_start(otahost, otapath, NULL)) {
         	printf("OTA starts successfully.\r\n");
         	is_ota_in_progress = true;
-        }
-        else {
+        } else {
         	printf("OTA starts unsuccessfully.\r\n");
         	is_ota_in_progress = false;
         }
@@ -250,7 +248,7 @@ static void on_command(IotclC2dEventData data) {
 	if (ack_id) {
 		iotcl_mqtt_send_cmd_ack(
 				ack_id,
-				command_success ? IOTCL_C2D_EVT_CMD_SUCCESS : IOTCL_C2D_EVT_CMD_FAILED,
+				command_success ? IOTCL_C2D_EVT_CMD_SUCCESS_WITH_ACK : IOTCL_C2D_EVT_CMD_FAILED,
 				message // allowed to be null, but should not be null if failed, we'd hope
 		);
 	} else {
