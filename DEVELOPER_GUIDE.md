@@ -3,6 +3,8 @@
 This document demonstrates the steps of setting up the Infineon PSoC&trade; 6 boards
 for connecting to Avnet's IoTConnect Platform. Supported boards are listed in the [README](https://github.com/avnet-iotconnect/iotc-modustoolbox-example/blob/main/README.md).
 
+For this release, if using OTA, you must use ModusToolbox&trade; 3.1. Version 3.2 is not compatible.
+
 ## Hardware Setup
 
 * The board needs to be connected to a USB port on your PC via the Micro USB cable.
