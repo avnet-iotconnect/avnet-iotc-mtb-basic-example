@@ -7,7 +7,7 @@
 *
 *
 *******************************************************************************
-* Copyright 2020-2021, Cypress Semiconductor Corporation (an Infineon company) or
+* Copyright 2020-2024, Cypress Semiconductor Corporation (an Infineon company) or
 * an affiliate of Cypress Semiconductor Corporation.  All rights reserved.
 *
 * This software, including source code, documentation and related
@@ -40,12 +40,12 @@
 *******************************************************************************/
 
 /******************************************************************************
- * FreeRTOS Kernel V10.3.1
- * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
- * Copyright (C) 2019-2020 Cypress Semiconductor Corporation, or a subsidiary of
+ * FreeRTOS Kernel V10.5.0
+ * Copyright (C) 2021 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * Copyright (C) 2019-2021 Cypress Semiconductor Corporation, or a subsidiary of
  * Cypress Semiconductor Corporation.  All Rights Reserved.
  *
- * Updated configuration to support PSoC 6 MCU.
+ * Updated configuration to support CM7.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -64,12 +64,11 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * http://www.FreeRTOS.org
- * http://aws.amazon.com/freertos
- * http://www.cypress.com
+ * https://www.FreeRTOS.org
+ * https://github.com/FreeRTOS
+ * http://www.infineon.com
  *
- ******************************************************************************/
-
+ */
 
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
@@ -87,7 +86,6 @@
  *----------------------------------------------------------*/
 
 #include "cy_utils.h"
-#include "cy_syslib.h"
 
 /* Get the low power configuration parameters from
  * the ModusToolbox Device Configurator GeneratedSource:
@@ -175,12 +173,12 @@ See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html
 
 */
 
-/* Put KERNEL_INTERRUPT_PRIORITY in top __NVIC_PRIO_BITS bits of CM4 register */
+/* Put KERNEL_INTERRUPT_PRIORITY in top __NVIC_PRIO_BITS bits of CM7 register */
 #define configKERNEL_INTERRUPT_PRIORITY         0xFF
 /*
-Put MAX_SYSCALL_INTERRUPT_PRIORITY in top __NVIC_PRIO_BITS bits of CM4 register
+Put MAX_SYSCALL_INTERRUPT_PRIORITY in top __NVIC_PRIO_BITS bits of CM7 register
 NOTE For IAR compiler make sure that changes of this macro is reflected in
-file portable\TOOLCHAIN_IAR\COMPONENT_CM4\portasm.s in PendSV_Handler: routine
+file portable\TOOLCHAIN_IAR\COMPONENT_CM7\portasm.s in PendSV_Handler: routine
 */
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY    0x3F
 /* configMAX_API_CALL_INTERRUPT_PRIORITY is a new name for configMAX_SYSCALL_INTERRUPT_PRIORITY
@@ -241,15 +239,14 @@ standard names - or at least those used in the unmodified vector table. */
 
 /* Enable low power tickless functionality. The RTOS abstraction library
  * provides the compatible implementation of the vApplicationSleep hook:
- * https://github.com/cypresssemiconductorco/abstraction-rtos#freertos
+ * https://github.com/Infineon/abstraction-rtos#freertos
  * The Low Power Assistant library provides additional portable configuration layer
  * for low-power features supported by the PSoC 6 devices:
- * https://github.com/cypresssemiconductorco/lpa
+ * https://github.com/Infineon/lpa
  */
 extern void vApplicationSleep( uint32_t xExpectedIdleTime );
 #define portSUPPRESS_TICKS_AND_SLEEP( xIdleTime ) vApplicationSleep( xIdleTime )
 #define configUSE_TICKLESS_IDLE                 2
-
 #else
 #define configUSE_TICKLESS_IDLE                 0
 #endif
@@ -265,7 +262,7 @@ extern void vApplicationSleep( uint32_t xExpectedIdleTime );
  * GCC toolchain: the application must provide the implementation for the required
  * newlib hook functions: __malloc_lock, __malloc_unlock, __env_lock, __env_unlock.
  * FreeRTOS-compatible implementation is provided by the clib-support library:
- * https://github.com/cypresssemiconductorco/clib-support
+ * https://github.com/Infineon/clib-support
  *
  * ARM/IAR toolchains: the application must provide the reent.h header to adapt
  * FreeRTOS's configUSE_NEWLIB_REENTRANT to work with the toolchain-specific C library.

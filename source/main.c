@@ -47,9 +47,10 @@
 #include "cyhal.h"
 #include "cybsp.h"
 #include "cy_retarget_io.h"
-#include "app_task.h"
+
 #include "FreeRTOS.h"
 #include "task.h"
+
 #include "cy_log.h"
 
 #include "app_task.h"
@@ -77,6 +78,16 @@ volatile int uxTopUsedPriority;
 int main() {
     cy_rslt_t result;
 
+#if defined (CY_DEVICE_SECURE) || defined (OTA_SUPPORT)
+    cyhal_wdt_t wdt_obj;
+
+    /* Clear watchdog timer so that it doesn't trigger a reset */
+    result = cyhal_wdt_init(&wdt_obj, cyhal_wdt_get_max_timeout_ms());
+    CY_ASSERT(CY_RSLT_SUCCESS == result);
+    cyhal_wdt_free(&wdt_obj);
+    printf("\nWatchdog timer started by the bootloader is now turned off!!!\n\n");
+#endif /* #if defined (CY_DEVICE_SECURE) */
+
     /* This enables RTOS aware debugging in OpenOCD. */
     uxTopUsedPriority = configMAX_PRIORITIES - 1;
 
@@ -85,8 +96,7 @@ int main() {
     CY_ASSERT(CY_RSLT_SUCCESS == result);
 
     /* Initialize retarget-io to use the debug UART port. */
-    cy_retarget_io_init(CYBSP_DEBUG_UART_TX, CYBSP_DEBUG_UART_RX,
-    CY_RETARGET_IO_BAUDRATE);
+    cy_retarget_io_init(CYBSP_DEBUG_UART_TX, CYBSP_DEBUG_UART_RX, CY_RETARGET_IO_BAUDRATE);
 
     /* To avoid compiler warnings. */
     (void) result;
@@ -97,13 +107,6 @@ int main() {
     /* default for all logging to WARNING */
     cy_log_init(CY_LOG_WARNING, NULL, NULL);
 
-#ifdef OTA_SUPPORT
-    cyhal_wdt_t wdt_obj;
-    /* Clear watchdog timer so that it doesn't trigger a reset */
-    cyhal_wdt_init(&wdt_obj, cyhal_wdt_get_max_timeout_ms());
-    cyhal_wdt_free(&wdt_obj);
-    printf("\nWatchdog timer started by the bootloader is now turned off!!!\n\n");
-#endif
     /* Create the MQTT Client task. */
     xTaskCreate(app_task, "App Task", APP_TASK_STACK_SIZE,
     NULL, APP_TASK_PRIORITY, NULL);
