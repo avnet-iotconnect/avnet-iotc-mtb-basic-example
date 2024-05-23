@@ -62,7 +62,7 @@
 #define APP_VERSION "02.00.00"
 static bool is_demo_mode = false;
 
-#ifdef OTA_SUPPORT
+#ifdef IOTC_OTA_SUPPORT
 static bool is_ota_in_progress = false;
 #endif
 
@@ -148,29 +148,21 @@ static cy_rslt_t wifi_connect(void) {
 }
 
 static void on_ota(IotclC2dEventData data) {
-    const char *url = iotcl_c2d_get_ota_url(data, 0);
-    if (url == NULL){
-    	printf("Download URL is invalid.\r\n");
-    	return;
-    }
-    // printf("Download URL is: %s\n", url);
-
-    const char *otahost = iotcl_c2d_get_ota_url_hostname(data, 0);
-    if (otahost == NULL){
+    const char *ota_host = iotcl_c2d_get_ota_url_hostname(data, 0);
+    if (ota_host == NULL){
     	printf("OTA host is invalid.\r\n");
     	return;
     }
-    const char *otapath = iotcl_c2d_get_ota_url_resource(data, 0);
-    if (otapath == NULL) {
+    const char *ota_path = iotcl_c2d_get_ota_url_resource(data, 0);
+    if (ota_path == NULL) {
     	printf("OTA resource is invalid.\r\n");
     	return;
     }
+    printf("OTA download for https://%s%s.\n", ota_host, ota_path);
 
-    printf("\nOTA host is %s.\nOTA resource is %s.\n", otahost, otapath);
-
-#ifdef OTA_SUPPORT
+#ifdef IOTC_OTA_SUPPORT
         /* Start the OTA task */
-        if(iotc_ota_start(otahost, otapath, NULL)) {
+        if(iotc_ota_start(IOTCONNECT_CONNECTION_TYPE, ota_host, ota_path, NULL)) {
         	printf("OTA starts successfully.\r\n");
         	is_ota_in_progress = true;
         } else {
@@ -279,7 +271,7 @@ void app_task(void *pvParameters) {
     printf("Starting The App Task\n");
     printf("===============================================================\n\n");
 
-#if defined(OTA_SUPPORT) && defined(OTA_USE_EXTERNAL_FLASH)
+#if defined(IOTC_OTA_SUPPORT) && defined(OTA_USE_EXTERNAL_FLASH)
     /* We need to init external flash */
 	iotc_ota_init();
 
@@ -361,8 +353,9 @@ void app_task(void *pvParameters) {
 
         int max_messages = is_demo_mode ? 600 : 30; // non-demo = 5 seconds * 10 * 30 = 25 minutes ; demo = 5 seconds * 10 * 600 = 8 hours
         for (int j = 0; iotconnect_sdk_is_connected() && j < max_messages; j++) {
-#ifdef OTA_SUPPORT
+#ifdef IOTC_OTA_SUPPORT
         	if (is_ota_in_progress == true) {
+                iotconnect_sdk_disconnect();
                 break;
         	}
 #endif
@@ -376,14 +369,14 @@ void app_task(void *pvParameters) {
     }
     iotconnect_sdk_deinit();
 
-	printf("\nAppTask Done.\nTerminating the AppTask...\n");
+	printf("\nAppTask Done.\n");
 	while (1) {
 		taskYIELD();
 	}
     return;
 
     exit_cleanup:
-	printf("\nError encountered. AppTask Done.\nTerminating the AppTask...\n");
+	printf("\nError encountered. AppTask Done.\n");
 	while (1) {
 		taskYIELD();
 	}

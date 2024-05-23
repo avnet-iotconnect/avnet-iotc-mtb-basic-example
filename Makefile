@@ -107,13 +107,22 @@ SOURCES=
 INCLUDES=./configs
 
 # Custom configuration of mbedtls library.
-MBEDTLSFLAGS = MBEDTLS_USER_CONFIG_FILE='"configs/mbedtls_user_config.h"'
+MBEDTLSFLAGS=MBEDTLS_USER_CONFIG_FILE='"mbedtls_user_config.h"'
+
+# Support OTA in the SDK with Infineon's OTA components
+# Generate flashmap etc. See more below...
+APP_OTA_SUPPORT=1
+
+# The basic sample can compile OTA, so enable the OTA code
+ifeq ($(APP_OTA_SUPPORT),1)
+DEFINES+=IOTC_OTA_SUPPORT
+endif
 
 # Turn off making tests for CJSON
-CJSONFLAGS = ENABLE_CJSON_TEST=Off ENABLE_CJSON_UTILS=Off
+CJSONFLAGS=ENABLE_CJSON_TEST=Off ENABLE_CJSON_UTILS=Off
 
 # Add additional defines to the build process (without a leading -D).
-DEFINES=$(MBEDTLSFLAGS) $(CJSONFLAGS) CYBSP_WIFI_CAPABLE CY_RETARGET_IO_CONVERT_LF_TO_CRLF 
+DEFINES=$(MBEDTLSFLAGS) $(CJSONFLAGS) $(IOTCLFLAGS) CYBSP_WIFI_CAPABLE CY_RETARGET_IO_CONVERT_LF_TO_CRLF
 DEFINES+=CY_RTOS_AWARE
 
 # for http client
@@ -121,11 +130,9 @@ DEFINES+=ENABLE_HTTP_CLIENT_LOGS MQTT_DO_NOT_USE_CUSTOM_CONFIG
 DEFINES+=HTTP_DO_NOT_USE_CUSTOM_CONFIG
 # for sntp
 DEFINES+=SNTP_SERVER_DNS
-# for OTA
-#DEFINES+=OTA_SUPPORT
 
 # Configure response header maximum length with the specified value - HTTP
-DEFINES += HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES=2048
+DEFINES+=HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES=2048
 
 # CY8CPROTO-062-4343W board shares the same GPIO for the user button (USER BTN1)
 # and the CYW4343W host wake up pin. Since this example uses the GPIO for
@@ -196,7 +203,6 @@ POSTBUILD=
 
 # Set to 1 to add OTA defines, sources, and libraries (must be used with MCUBoot)
 # NOTE: Extra code must be called from your app to initialize the OTA middleware.
-OTA_SUPPORT=0
 
 # HTTP Support
 OTA_HTTP_SUPPORT=1
@@ -213,7 +219,7 @@ COMPONENTS+=OTA_PSOC_062
 OTA_PLATFORM=PSOC_062_2M
 
 # Only one of the following two if conditions will be true
-OTA_FLASH_MAP=$(SEARCH_avnet-iotc-mtb-sdk)/lib/ota-update/configs/flashmap/psoc62_2m_ext_swap_single.json
+OTA_FLASH_MAP=$(SEARCH_avnet-iotc-mtb-sdk)/lib/ota-update/configs/flashmap/psoc62_2m_int_swap_single.json
 
 # Change the version here or over-ride by setting an environment variable
 # before building the application.
@@ -229,18 +235,18 @@ OTA_APP_VERSION_BUILD?=0
 # OTA Functionality support
 #
 ###############################################################################
-ifeq ($(OTA_SUPPORT),1)
+ifeq ($(APP_OTA_SUPPORT),1)
 
     # Build location local to this root directory.
     CY_BUILD_LOC:=./build
-    
+
     # MCUBootApp header is added during signing step in POSTBUILD (sign_script.bash)
     MCUBOOT_HEADER_SIZE=0x400
-    
+
     # Internal and external flash erased values used during signing step in POSTBUILD (sign_script.bash)
     CY_INTERNAL_FLASH_ERASE_VALUE=0x00
     CY_EXTERNAL_FLASH_ERASE_VALUE=0xFF
-    
+
     # Add OTA_PLATFORM in DEFINES for platform-specific code
     # ex: source/port_support/mcuboot/COMPONENT_OTA_PSOC_062/flash_qspi/flash_qspi.c
     DEFINES+=$(OTA_PLATFORM)
@@ -274,11 +280,11 @@ ifeq ($(OTA_SUPPORT),1)
         # That we need to turn off XIP and enter critical section when accessing SMIF.
         #  NOTE: CYW920829M2EVB-01 does not need this.
         CY_XIP_SMIF_MODE_CHANGE=1
-    
+
         # Since we are running hybrid (some in RAM, some in External FLash),
         #   we need to override the WEAK functions in CYHAL
         DEFINES+=CYHAL_DISABLE_WEAK_FUNC_IMPL=1
-    
+
     endif # USE_XIP
 
     ifeq ($(FLASH_AREA_IMG_1_SECONDARY_DEV_ID),FLASH_DEVICE_INTERNAL_FLASH)
@@ -291,7 +297,7 @@ ifeq ($(OTA_SUPPORT),1)
     # Add OTA defines to build
     ###################################
     DEFINES+=\
-        OTA_SUPPORT=1 \
+        IOTC_OTA_SUPPORT=1 \
         APP_VERSION_MAJOR=$(OTA_APP_VERSION_MAJOR)\
         APP_VERSION_MINOR=$(OTA_APP_VERSION_MINOR)\
         APP_VERSION_BUILD=$(OTA_APP_VERSION_BUILD)
@@ -415,7 +421,7 @@ ifeq ($(OTA_SUPPORT),1)
               $(MCUBOOT_SCRIPT_FILE_DIR) $(IMGTOOL_SCRIPT_NAME) $(IMGTOOL_COMMAND_ARG) $(FLASH_ERASE_SECONDARY_SLOT_VALUE) $(MCUBOOT_HEADER_SIZE)\
               $(MCUBOOT_MAX_IMG_SECTORS) $(APP_BUILD_VERSION) $(FLASH_AREA_IMG_1_PRIMARY_START) $(FLASH_AREA_IMG_1_PRIMARY_SIZE)\
               $(CY_HEX_TO_BIN) $(CY_SIGNING_KEY_ARG)
-endif # OTA_SUPPORT
+endif # IOTC_OTA_SUPPORT
 
 
 ################################################################################
@@ -508,6 +514,6 @@ ifeq ($(OTA_SUPPORT),1)
     endif # NOT getlibs
     endif # NOT get_app_info
     endif # NOT printlibs
-    
+
 endif # OTA_SUPPORT
 

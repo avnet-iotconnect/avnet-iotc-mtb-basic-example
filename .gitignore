@@ -6,6 +6,9 @@
 # Generated files
 /.mtbLaunchConfigs/
 
+# Flashmap generated when APP_OTA_SUPPORT is set in the makefile
+/flashmap.mk
+
 # You may or may not check this is
 /deps/assetlocks.json
 /libs/
