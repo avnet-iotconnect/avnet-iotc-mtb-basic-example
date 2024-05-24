@@ -108,8 +108,7 @@ int main() {
     cy_log_init(CY_LOG_WARNING, NULL, NULL);
 
     /* Create the MQTT Client task. */
-    xTaskCreate(app_task, "App Task", APP_TASK_STACK_SIZE,
-    NULL, APP_TASK_PRIORITY, NULL);
+    xTaskCreate(app_task, "App Task", APP_TASK_STACK_SIZE, NULL, APP_TASK_PRIORITY, NULL);
 
     /* Start the FreeRTOS scheduler. */
     vTaskStartScheduler();

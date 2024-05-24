@@ -1,3 +1,4 @@
+# Uncomment this line for APP_OTA_SUPPORT
 $(SEARCH_avnet-iotc-mtb-sdk)/lib/ota-update
 
 # Indirectly, we need the libraries/standard from this AWS SDK dependency for coreHTTP and coreMQTT
