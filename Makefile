@@ -143,7 +143,7 @@ MBEDTLSFLAGS=MBEDTLS_USER_CONFIG_FILE='"mbedtls_user_config.h"'
 
 # Support OTA in the SDK with Infineon's OTA components
 # Generate flashmap etc. See more below...
-OTA_SUPPORT=1
+OTA_SUPPORT=0
 
 # The basic sample can support OTA, so enable the OTA code into the IoTConnect SDK
 ifeq ($(OTA_SUPPORT),1)
