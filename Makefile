@@ -141,8 +141,7 @@ DEFINES=
 # Custom configuration of mbedtls library.
 MBEDTLSFLAGS=MBEDTLS_USER_CONFIG_FILE='"mbedtls_user_config.h"'
 
-# Support OTA in the SDK with Infineon's OTA components
-# Generate flashmap etc. See more below...
+# Support IoTConnect OTA in the application along with Infineon's OTA components
 OTA_SUPPORT=0
 
 # The basic sample can support OTA, so enable the OTA code into the IoTConnect SDK
@@ -244,10 +243,6 @@ POSTBUILD=
 #
 ###############################################################################
 
-# Set to 1 to add OTA defines, sources, and libraries (must be used with MCUBoot)
-# NOTE: Extra code must be called from your app to initialize the OTA middleware.
-OTA_SUPPORT=1
-
 ifeq ($(OTA_SUPPORT),1)
 
 # Enable HTTP Support
@@ -301,7 +296,7 @@ APP_VERSION_MAJOR?=1
 APP_VERSION_MINOR?=0
 APP_VERSION_BUILD?=0
 
-DEFINES+=OTA_SUPPORT=$(OTA_SUPPORT)\
+DEFINES+=OTA_SUPPORT=1\
          APP_VERSION_MAJOR=$(APP_VERSION_MAJOR)\
          APP_VERSION_MINOR=$(APP_VERSION_MINOR)\
          APP_VERSION_BUILD=$(APP_VERSION_BUILD)

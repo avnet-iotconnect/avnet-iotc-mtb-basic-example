@@ -136,3 +136,34 @@ provide them in configs/app_config.h formatted specified as a C string #define l
   The same format needs to be used for the private key as `#define IOTCONNECT_DEVICE_KEY`
 
 At this point, the device can be reprogrammed with the newly built firmware.
+
+## OTA Support
+
+This project supports IoTConnect OTA via the ota-update library with the CY8CPROTO-062-4343W board.
+
+The port of the OTA feature is rudimentary for purpose demonstration and not recommended for production. 
+If you wish to support the OTA functionality for your board, please learn more about it by starting at the
+[mtb-example-ota-https](https://github.com/Infineon/mtb-example-ota-https) sample.
+
+> [!NOTE]  
+> The OTA feature is not supported with CY8CKIT-062-WIFI-BT
+
+In order to add ioTConnect OTA support to this project, 
+do the following steps once you have opened this project in Eclipse:
+* Select this application in the top left panel and open the Library Manager from the bottom left Quick Panel.
+* Clik the *Add Library* button and add **ota-update** and **ota-bootloader-abstraction** libraries. 
+The project has been tested with  ota-update release-v4.1.0 and ota-bootloader-abstraction release-v1.1.0.
+* Set OTA_SUPPORT to 1 in the Makefile:
+```makefile
+# Support IoTConnect OTA in the application along with Infineon's OTA components
+OTA_SUPPORT=1
+```
+* Either select *New Application* in the quick panel and select the *MCUboot-Based Basic Bootloader* or 
+build the MCUBoot sample in an isolated workspace and directory.
+* Copy the *psoc62_2m_ext_swap_single.json* flashmap JSON file from the [flasmap](flashmap) directory and paste it in the \<MCUboot>/flashmap folder.
+* Modify the value of the FLASH_MAP variable in the \<MCUboot>/user_config.mk file to use *psoc62_2m_ext_swap_single.json*
+* Connect the board to your PC using the provided USB cable through the KitProg3 USB connector. 
+Ensure that you have the serial terminal application connected.
+* Select the *MCUboot-Based_Basic_Bootloader.bootloader_app* in the \<MCUboot> project in the left panel and open the terminal the bottom panel.
+The terminal should be in the MCUboot-Based_Basic_Bootloader/bootloader_app directory.
+* From the terminal, execute the `make program_proj` command to build and program the MCUboot-based bootloader application.
