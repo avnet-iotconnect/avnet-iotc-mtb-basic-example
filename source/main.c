@@ -85,7 +85,6 @@ int main() {
     result = cyhal_wdt_init(&wdt_obj, cyhal_wdt_get_max_timeout_ms());
     CY_ASSERT(CY_RSLT_SUCCESS == result);
     cyhal_wdt_free(&wdt_obj);
-    printf("\nWatchdog timer started by the bootloader is now turned off!!!\n\n");
 #endif /* #if defined (CY_DEVICE_SECURE) */
 
     /* This enables RTOS aware debugging in OpenOCD. */

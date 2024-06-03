@@ -23,7 +23,6 @@
 # limitations under the License.
 ################################################################################
 
-
 ################################################################################
 # Basic Configuration
 ################################################################################
@@ -115,16 +114,7 @@ endif
 COMPONENTS=FREERTOS LWIP MBEDTLS SECURE_SOCKETS
 
 # Like COMPONENTS, but disable optional code that was enabled by default.
-#DISABLE_COMPONENTS=
-
-##### OTA MAKEFILE MERGED FROM mtb-example-ota-https ######
-# Like COMPONENTS, but disable optional code that was enabled by default.
-ifneq ($(PLATFORM), XMC7200)
-DISABLE_COMPONENTS=CM0P_SLEEP CM0P_SECURE CM0P_CRYPTO CM0P_BLESS
-else
-DISABLE_COMPONENTS=XMC7xDUAL_CM0P_SLEEP XMC7x_CM0P_SLEEP
-endif
-##### END OTA MAKEFILE MERGED FROM mtb-example-ota-https ######
+DISABLE_COMPONENTS=
 
 # By default the build system automatically looks in the Makefile's directory
 # tree for source code and builds it. The SOURCES variable can be used to
@@ -141,8 +131,21 @@ DEFINES=
 # Custom configuration of mbedtls library.
 MBEDTLSFLAGS=MBEDTLS_USER_CONFIG_FILE='"mbedtls_user_config.h"'
 
+
 # Support IoTConnect OTA in the application along with Infineon's OTA components
+# This setting drives the behavior of this makefile
 OTA_SUPPORT=0
+
+ifeq ($(OTA_SUPPORT),1)
+##### OTA MAKEFILE MERGED FROM mtb-example-ota-https ######
+# Like COMPONENTS, but disable optional code that was enabled by default.
+ifneq ($(PLATFORM), XMC7200)
+DISABLE_COMPONENTS=CM0P_SLEEP CM0P_SECURE CM0P_CRYPTO CM0P_BLESS
+else
+DISABLE_COMPONENTS=XMC7xDUAL_CM0P_SLEEP XMC7x_CM0P_SLEEP
+endif
+##### END OTA MAKEFILE MERGED FROM mtb-example-ota-https ######
+endif # OTA_SUPPORT
 
 # The basic sample can support OTA, so enable the OTA code into the IoTConnect SDK
 ifeq ($(OTA_SUPPORT),1)

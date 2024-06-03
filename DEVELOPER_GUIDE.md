@@ -31,11 +31,16 @@ Firmware logs will be available on that COM port.
   * Flow Control: `none`
   
 ## Building the Software
+
+> [!NOTE]
 > If you wish to contribute to this project or work with your own git fork,
 > or evaluate an application version that is not yet released, the setup steps will change 
 > the setup steps slightly.
 > In that case, read [DEVELOPER_LOCAL_SETUP.md](./DEVELOPER_LOCAL_SETUP.md) 
 > before continuing to the steps below.
+> 
+> Follow the [Contributing Guidelines](https://github.com/avnet-iotconnect/iotc-c-lib/blob/master/CONTRIBUTING.md) 
+> if you are contributing to this project.
 
 - Download, install [ModusToolbox&trade; software](https://www.infineon.com/cms/en/design-support/tools/sdk/modustoolbox-software/)
 version 3.2 or later. Install the development suite with Modus Toolbox&trade; Setup. 
@@ -54,7 +59,15 @@ VsCode integration and other tools may work, but actively tested and not a part 
 - Open the installed Eclipse IDE For Modus Toolbox&trade; application.
 - When prompted for the workspace, choose an arbitrary location for your workspace and click the *Launch* button.
 - Click the **Import Existing Application In-Place** link in the *Quick Panel* at the bottom left of the window.
-- Select the directory chosen during the Project Creator step above (*C:\iotc-xensiv*, for example).
+- Select the directory chosen during the Project Creator step above (*C:/avt-demo*, for example).
+
+> [!TIP]
+> The Compilation Database Parser makes it so that Eclipse IDE understands compile time preprocessor defines
+> applied to the project while editing code.
+> Depending on the development stage, one can improve Eclipse build time and responsiveness by disabling it using this method:
+> Right-click the project and select Properties > C/C++ General >Preprocessor Include Paths > Providers, 
+> and deselect the Compilation Database Parser check box.
+
 - At this point you should be able to build and run the application by clicking the application first in 
 the project explorer panel and then clicking the *application-name-Debug* or *Program* *KitProg3_MiniProg4 
 launch configurations in *Quick Panel* at the bottom left of the IDE screen.
@@ -142,7 +155,7 @@ At this point, the device can be reprogrammed with the newly built firmware.
 This project supports IoTConnect OTA via the ota-update library with the CY8CPROTO-062-4343W board.
 
 The port of the OTA feature is rudimentary for purpose demonstration and not recommended for production. 
-If you wish to support the OTA functionality for your board, please learn more about it by starting at the
+If you wish to support the OTA functionality for your board, please learn more from the README of the
 [mtb-example-ota-https](https://github.com/Infineon/mtb-example-ota-https) sample.
 
 > [!NOTE]  
@@ -150,20 +163,41 @@ If you wish to support the OTA functionality for your board, please learn more a
 
 In order to add ioTConnect OTA support to this project, 
 do the following steps once you have opened this project in Eclipse:
-* Select this application in the top left panel and open the Library Manager from the bottom left Quick Panel.
-* Clik the *Add Library* button and add **ota-update** and **ota-bootloader-abstraction** libraries. 
-The project has been tested with  ota-update release-v4.1.0 and ota-bootloader-abstraction release-v1.1.0.
-* Set OTA_SUPPORT to 1 in the Makefile:
+
+* Select this application in the top left panel and open the Library Manager from the bottom left Quick Panel. 
+Note that the library manager may take some time appear in the quick panel.
+* Clik the *Add Library* button and add **ota-update** version *release-v4.1.0* 
+ and **ota-bootloader-abstraction** version *release-v1.1.0* libraries.
+* Locate the `OTA_SUPPORT=0` line in the Makefile and set OTA_SUPPORT to 1:
 ```makefile
-# Support IoTConnect OTA in the application along with Infineon's OTA components
 OTA_SUPPORT=1
 ```
-* Either select *New Application* in the quick panel and select the *MCUboot-Based Basic Bootloader* or 
-build the MCUBoot sample in an isolated workspace and directory.
-* Copy the *psoc62_2m_ext_swap_single.json* flashmap JSON file from the [flasmap](flashmap) directory and paste it in the \<MCUboot>/flashmap folder.
+* It is necessary to modify the linker files so that the image components are placed in the correct flash section:
+  * Locate the CM4 component template files for your board in the templates-ota directory.
+  For example, for CY8CPROTO-062-4343W they will be at templates-ota/TARGET_CY8CPROTO-062-4343W/COMPONENT_CM4/TOOLCHAIN_GCC_ARM
+  * Replace your BSP files with the files from the templates-ota directory. 
+  For CY8CPROTO-062-4343W, your corresponding BSP files would be located at bsps/TARGET_**APP**_CY8CPROTO-062-4343W/COMPONENT_CM4/TOOLCHAIN_GCC_ARM/
+  * If you cloned this project's repo or have your own repository, this part of the setup can be streamlined by simply
+  renaming the templates-ota directory to ``templates`` before the project is imported with Project Creator. 
+  is done with intention 
+
+> The content of the templates-ota directory is not compatible with OTA_SUPPORT being disabled, so if you need to 
+> switch to OTA_SUPPORT=0, it is recommended that you re-create this project with the Project Creator. 
+
+We now need to build the *MCUboot-Based Basic Bootloader* application separately and load it onto the board.
+The following steps are compatible with the bootloader sample application version *release-7.0.0*
+and if any issues are encountered, you should clone 
+the [mtb-example-mcuboot-basic](https://github.com/Infineon/mtb-example-mcuboot-basic/tree/release-v7.0.0) 
+release-v7.0.0 tag of the application and use the steps similar to the [DEVELOPER_LOCAL_SETUP.md](DEVELOPER_LOCAL_SETUP.md)
+to import the local project with Project Creator.
+
+* Use the Project Creator to import the *MCUboot-Based Basic Bootloader* application into a separate workspace/directory.
+* Copy the *psoc62_2m_ext_swap_single.json* flashmap JSON file from this project in the [flashmap](flashmap) directory into the \<MCUboot>/flashmap director.
 * Modify the value of the FLASH_MAP variable in the \<MCUboot>/user_config.mk file to use *psoc62_2m_ext_swap_single.json*
 * Connect the board to your PC using the provided USB cable through the KitProg3 USB connector. 
-Ensure that you have the serial terminal application connected.
-* Select the *MCUboot-Based_Basic_Bootloader.bootloader_app* in the \<MCUboot> project in the left panel and open the terminal the bottom panel.
+* Select the *MCUboot-Based_Basic_Bootloader.bootloader_app* in the \<MCUboot> project in the left panel and open the Eclipse terminal window the bottom panel.
 The terminal should be in the MCUboot-Based_Basic_Bootloader/bootloader_app directory.
 * From the terminal, execute the `make program_proj` command to build and program the MCUboot-based bootloader application.
+
+You can now build and upload the basic example application. 
+If this is done correctly, when starting up the board you should see the bootloader messages followed by the application startup messages. 
