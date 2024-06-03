@@ -4,7 +4,7 @@ This document demonstrates the steps of setting up the Infineon PSoC&trade; 6 bo
 for connecting to Avnet's IoTConnect Platform. Supported boards are listed in 
 the [README.md](README.md).
 
-The guide has been tested with the Eclipse option in Project Creator.  
+The project has been tested with the Eclipse option in Project Creator an only supports the ARM_GCC (Eclispe default) toolchain.
 
 For an example with OTA support, you must use the earlier version of this
 software under the `release-v4.0.0` label, along with ModusToolbox&trade; 3.1.
