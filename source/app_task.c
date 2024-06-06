@@ -210,10 +210,6 @@ static void on_command(IotclC2dEventData data) {
 
     const char *command = iotcl_c2d_get_command(data);
     const char *ack_id = iotcl_c2d_get_ack_id(data);
-    if (ack_id) {
-    	printf("WARNING: Acknowledgments are not supported with this software version!");
-    	ack_id = NULL; // Force code flow to be the same as if there was no ACK.
-    }
     if (command) {
     	bool arg_parsing_success;
         printf("Command %s received with %s ACK ID\n", command, ack_id ? ack_id : "no");
@@ -227,8 +223,8 @@ static void on_command(IotclC2dEventData data) {
         } else if (parse_on_off_command(command, DEMO_MODE_CMD,  &arg_parsing_success, &is_demo_mode, &message)) {
         	command_success = arg_parsing_success;
         } else {
-            printf("Failed to parse command\n");
-        	message = "Unrecognized command";
+            printf("Unknown command \"%s\"\n", command);
+        	message = "Unkown command";
         }
     } else {
     	printf("Failed to parse command. Command missing?\n");
@@ -363,7 +359,9 @@ void app_task(void *pvParameters) {
         	if (result != CY_RSLT_SUCCESS) {
         		break;
         	}
-            vTaskDelay(pdMS_TO_TICKS(10000));
+        	// Wait up to 10 seconds for any inbound messages to be processed
+        	// while introducing a purposeful delay between telemetry messages
+        	iotconnect_sdk_poll_inbound_mq(10000);
         }
         iotconnect_sdk_disconnect();
     }
@@ -380,5 +378,4 @@ void app_task(void *pvParameters) {
 	while (1) {
 		taskYIELD();
 	}
-
 }
