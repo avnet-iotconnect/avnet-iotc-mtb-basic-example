@@ -59,13 +59,13 @@
 #include "app_task.h"
 #include "iotc_ota.h"
 
-#define APP_VERSION "02.00.00"
+
+#define APP_VERSION "02.01.00"
 static bool is_demo_mode = false;
 
 #ifdef IOTC_OTA_SUPPORT
 static bool is_ota_in_progress = false;
 #endif
-
 
 
 static void on_connection_status(IotConnectConnectionStatus status) {
@@ -251,7 +251,7 @@ static cy_rslt_t publish_telemetry(void) {
     // Optional. The first time you create a data point, the current timestamp will be automatically added
     // TelemetryAddWith* calls are only required if sending multiple data points in one packet.
     iotcl_telemetry_set_string(msg, "version", APP_VERSION);
-    iotcl_telemetry_set_number(msg, "random", random() % 100); // test some random numbers
+    iotcl_telemetry_set_number(msg, "random", rand() % 100); // test some random numbers
 
     iotcl_mqtt_send_telemetry(msg, false);
     iotcl_telemetry_destroy(msg);
