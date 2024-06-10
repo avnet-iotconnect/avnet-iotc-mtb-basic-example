@@ -75,6 +75,24 @@ volatile int uxTopUsedPriority;
  *  int
  *
  ******************************************************************************/
+
+// A VERY crude implementation of log output so we can at least see some messages
+int app_log_output_callback(CY_LOG_FACILITY_T facility, CY_LOG_LEVEL_T level, char *logmsg) {
+  (void)facility;     // Can be used to decide to reduce output or send output to remote logging
+  (void)level;        // Can be used to decide to reduce output, although the output has already been
+                      // limited by the log routines
+
+  return printf( "%s\n", logmsg);   // print directly to console
+}
+
+// A VERY crude implementation for obtaining timestamp (always 0) for logs so we can at least see some messages
+cy_rslt_t app_log_time(uint32_t* time) {
+    if (time != NULL) {
+        *time = 0;
+    }
+    return CY_RSLT_SUCCESS;
+}
+
 int main() {
     cy_rslt_t result;
 
@@ -104,7 +122,11 @@ int main() {
     __enable_irq();
 
     /* default for all logging to WARNING */
-    cy_log_init(CY_LOG_WARNING, NULL, NULL);
+    cy_log_init(CY_LOG_WARNING, app_log_output_callback, app_log_time);
+
+    // Uncomment this line to get more info from HTTP and similar
+    // if encountering issues
+    // cy_log_set_facility_level(CYLF_MIDDLEWARE, CY_LOG_INFO);
 
     /* Create the MQTT Client task. */
     xTaskCreate(app_task, "App Task", APP_TASK_STACK_SIZE, NULL, APP_TASK_PRIORITY, NULL);
