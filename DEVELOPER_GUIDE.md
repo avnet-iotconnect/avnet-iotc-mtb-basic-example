@@ -158,8 +158,9 @@ The port of the OTA feature is rudimentary for purpose demonstration and not rec
 If you wish to support the OTA functionality for your board, please learn more from the README of the
 [mtb-example-ota-https](https://github.com/Infineon/mtb-example-ota-https) sample.
 
-> [!NOTE]  
-> The OTA feature is not supported with CY8CKIT-062-WIFI-BT
+> [!NOTE]
+> * The OTA feature is not supported with CY8CKIT-062-WIFI-BT.
+> * The OTA feature only works with IoTConnect-Azure, not IoTConnect-AWS. We will support OTA in future on IoTConnect-AWS. 
 
 In order to add ioTConnect OTA support to this project, 
 do the following steps once you have opened this project in Eclipse:
@@ -182,7 +183,9 @@ OTA_SUPPORT=1
   is done with intention 
 
 > The content of the templates-ota directory is not compatible with OTA_SUPPORT being disabled, so if you need to 
-> switch to OTA_SUPPORT=0, it is recommended that you re-create this project with the Project Creator. 
+> switch to OTA_SUPPORT=0, it is recommended that you re-create this project with the Project Creator.
+* Update the "CY_OTA_CHUNK_SIZE" to 0x8000 in the lib file(mtb-shared/ota-udpate/<tag>/include/cy_ota_api.h).
+* Update the chunk buffer to "uint8_t chunk_buffer[CY_OTA_CHUNK_SIZE + 1024]" in the lib file(mtb-shared/ota-update/<tag>/source/cy_ota_internal.h).
 
 We now need to build the *MCUboot-Based Basic Bootloader* application separately and load it onto the board.
 The following steps are compatible with the bootloader sample application version *release-7.0.0*

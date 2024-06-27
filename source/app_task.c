@@ -153,16 +153,18 @@ static void on_ota(IotclC2dEventData data) {
     	printf("OTA host is invalid.\r\n");
     	return;
     }
+
     const char *ota_path = iotcl_c2d_get_ota_url_resource(data, 0);
     if (ota_path == NULL) {
     	printf("OTA resource is invalid.\r\n");
     	return;
     }
-    printf("OTA download for https://%s%s.\n", ota_host, ota_path);
+
+    printf("\n\nOTA download for https://%s%s\n", ota_host, ota_path);
 
 #ifdef IOTC_OTA_SUPPORT
         /* Start the OTA task */
-        if(iotc_ota_start(IOTCONNECT_CONNECTION_TYPE, ota_host, ota_path, NULL)) {
+        if(iotc_ota_start(IOTCONNECT_CONNECTION_TYPE, ota_host, ota_path, NULL) == CY_RSLT_SUCCESS) {
         	printf("OTA starts successfully.\r\n");
         	is_ota_in_progress = true;
         } else {
@@ -351,7 +353,7 @@ void app_task(void *pvParameters) {
         for (int j = 0; iotconnect_sdk_is_connected() && j < max_messages; j++) {
 #ifdef IOTC_OTA_SUPPORT
         	if (is_ota_in_progress == true) {
-                iotconnect_sdk_disconnect();
+        		printf("... ...OTA is in progress and stop publishing data\n");
                 break;
         	}
 #endif
@@ -361,9 +363,12 @@ void app_task(void *pvParameters) {
         	}
         	// Wait up to 10 seconds for any inbound messages to be processed
         	// while introducing a purposeful delay between telemetry messages
-        	iotconnect_sdk_poll_inbound_mq(10000);
+            iotconnect_sdk_poll_inbound_mq(10000);
         }
         iotconnect_sdk_disconnect();
+        if (is_ota_in_progress == true) {
+        	break;
+        }
     }
     iotconnect_sdk_deinit();
 
