@@ -180,7 +180,6 @@ OTA_SUPPORT=1
   For CY8CPROTO-062-4343W, your corresponding BSP files would be located at bsps/TARGET_**APP**_CY8CPROTO-062-4343W/COMPONENT_CM4/TOOLCHAIN_GCC_ARM/
   * If you cloned this project's repo or have your own repository, this part of the setup can be streamlined by simply
   renaming the templates-ota directory to ``templates`` before the project is imported with Project Creator. 
-  is done with intention 
 
 > The content of the templates-ota directory is not compatible with OTA_SUPPORT being disabled, so if you need to 
 > switch to OTA_SUPPORT=0, it is recommended that you re-create this project with the Project Creator.
@@ -198,7 +197,7 @@ to import the local project with Project Creator.
 * Copy the *psoc62_2m_ext_swap_single.json* flashmap JSON file from this project in the [flashmap](flashmap) directory into the \<MCUboot>/flashmap director.
 * Modify the value of the FLASH_MAP variable in the \<MCUboot>/user_config.mk file to use *psoc62_2m_ext_swap_single.json*
 * Connect the board to your PC using the provided USB cable through the KitProg3 USB connector. 
-* Select the *MCUboot-Based_Basic_Bootloader.bootloader_app* in the \<MCUboot> project in the left panel and open the Eclipse terminal window the bottom panel.
+* Select the *MCUboot-Based_Basic_Bootloader.bootloader_app* in the \<MCUboot> project in the left panel and open the Eclipse Terminal window in the bottom panel.
 The terminal should be in the MCUboot-Based_Basic_Bootloader/bootloader_app directory.
 * From the terminal, execute the `make program_proj` command to build and program the MCUboot-based bootloader application.
 
