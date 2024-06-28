@@ -167,8 +167,8 @@ do the following steps once you have opened this project in Eclipse:
 
 * Select this application in the top left panel and open the Library Manager from the bottom left Quick Panel. 
 Note that the library manager may take some time appear in the quick panel.
-* Clik the *Add Library* button and add **ota-update** version *release-v4.1.0* 
- and **ota-bootloader-abstraction** version *release-v1.1.0* libraries.
+* Clik the *Add Library* button and add **ota-update** version *release-v4.2.0* 
+ and **ota-bootloader-abstraction** version *release-v1.2.0* libraries.
 * Locate the `OTA_SUPPORT=0` line in the Makefile and set OTA_SUPPORT to 1:
 ```makefile
 OTA_SUPPORT=1
