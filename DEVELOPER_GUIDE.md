@@ -158,16 +158,17 @@ The port of the OTA feature is rudimentary for purpose demonstration and not rec
 If you wish to support the OTA functionality for your board, please learn more from the README of the
 [mtb-example-ota-https](https://github.com/Infineon/mtb-example-ota-https) sample.
 
-> [!NOTE]  
-> The OTA feature is not supported with CY8CKIT-062-WIFI-BT
+> [!NOTE]
+> * The OTA feature is not supported with CY8CKIT-062-WIFI-BT.
+> * The OTA feature only works with IoTConnect-Azure, not IoTConnect-AWS. We will support OTA in future on IoTConnect-AWS. 
 
 In order to add ioTConnect OTA support to this project, 
 do the following steps once you have opened this project in Eclipse:
 
 * Select this application in the top left panel and open the Library Manager from the bottom left Quick Panel. 
 Note that the library manager may take some time appear in the quick panel.
-* Clik the *Add Library* button and add **ota-update** version *release-v4.1.0* 
- and **ota-bootloader-abstraction** version *release-v1.1.0* libraries.
+* Clik the *Add Library* button and add **ota-update** version *release-v4.2.0* 
+ and **ota-bootloader-abstraction** version *release-v1.2.0* libraries.
 * Locate the `OTA_SUPPORT=0` line in the Makefile and set OTA_SUPPORT to 1:
 ```makefile
 OTA_SUPPORT=1
@@ -179,10 +180,11 @@ OTA_SUPPORT=1
   For CY8CPROTO-062-4343W, your corresponding BSP files would be located at bsps/TARGET_**APP**_CY8CPROTO-062-4343W/COMPONENT_CM4/TOOLCHAIN_GCC_ARM/
   * If you cloned this project's repo or have your own repository, this part of the setup can be streamlined by simply
   renaming the templates-ota directory to ``templates`` before the project is imported with Project Creator. 
-  is done with intention 
 
 > The content of the templates-ota directory is not compatible with OTA_SUPPORT being disabled, so if you need to 
-> switch to OTA_SUPPORT=0, it is recommended that you re-create this project with the Project Creator. 
+> switch to OTA_SUPPORT=0, it is recommended that you re-create this project with the Project Creator.
+* Update the "CY_OTA_CHUNK_SIZE" to 0x4000 in the lib file(mtb_shared/ota-udpate/\<tag>/include/cy_ota_api.h).
+* Update the chunk buffer to "uint8_t chunk_buffer[CY_OTA_CHUNK_SIZE + 1024]" in the lib file(mtb_shared/ota-update/\<tag>/source/cy_ota_internal.h).
 
 We now need to build the *MCUboot-Based Basic Bootloader* application separately and load it onto the board.
 The following steps are compatible with the bootloader sample application version *release-7.0.0*
@@ -195,7 +197,7 @@ to import the local project with Project Creator.
 * Copy the *psoc62_2m_ext_swap_single.json* flashmap JSON file from this project in the [flashmap](flashmap) directory into the \<MCUboot>/flashmap director.
 * Modify the value of the FLASH_MAP variable in the \<MCUboot>/user_config.mk file to use *psoc62_2m_ext_swap_single.json*
 * Connect the board to your PC using the provided USB cable through the KitProg3 USB connector. 
-* Select the *MCUboot-Based_Basic_Bootloader.bootloader_app* in the \<MCUboot> project in the left panel and open the Eclipse terminal window the bottom panel.
+* Select the *MCUboot-Based_Basic_Bootloader.bootloader_app* in the \<MCUboot> project in the left panel and open the Eclipse Terminal window in the bottom panel.
 The terminal should be in the MCUboot-Based_Basic_Bootloader/bootloader_app directory.
 * From the terminal, execute the `make program_proj` command to build and program the MCUboot-based bootloader application.
 
