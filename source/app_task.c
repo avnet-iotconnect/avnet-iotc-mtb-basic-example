@@ -59,13 +59,13 @@
 #include "app_task.h"
 #include "iotc_ota.h"
 
-#define APP_VERSION "02.00.00"
+
+#define APP_VERSION "02.01.00"
 static bool is_demo_mode = false;
 
-#ifdef OTA_SUPPORT
+#ifdef IOTC_OTA_SUPPORT
 static bool is_ota_in_progress = false;
 #endif
-
 
 
 static void on_connection_status(IotConnectConnectionStatus status) {
@@ -148,33 +148,27 @@ static cy_rslt_t wifi_connect(void) {
 }
 
 static void on_ota(IotclC2dEventData data) {
-    const char *url = iotcl_c2d_get_ota_url(data, 0);
-    if (url == NULL){
-    	printf("Download URL is invalid.\r\n");
-    	return;
-    }
-    // printf("Download URL is: %s\n", url);
-
-    const char *otahost = iotcl_c2d_get_ota_url_hostname(data, 0);
-    if (otahost == NULL){
+    const char *ota_host = iotcl_c2d_get_ota_url_hostname(data, 0);
+    if (ota_host == NULL){
     	printf("OTA host is invalid.\r\n");
     	return;
     }
-    const char *otapath = iotcl_c2d_get_ota_url_resource(data, 0);
-    if (otapath == NULL) {
+
+    const char *ota_path = iotcl_c2d_get_ota_url_resource(data, 0);
+    if (ota_path == NULL) {
     	printf("OTA resource is invalid.\r\n");
     	return;
     }
 
-    printf("\nOTA host is %s.\nOTA resource is %s.\n", otahost, otapath);
+    printf("\n\nOTA download for https://%s%s\n", ota_host, ota_path);
 
-#ifdef OTA_SUPPORT
+#ifdef IOTC_OTA_SUPPORT
         /* Start the OTA task */
-        if(iotc_ota_start(otahost, otapath, NULL)) {
-        	printf("OTA starts successfully.\r\n");
+        if(iotc_ota_start(IOTCONNECT_CONNECTION_TYPE, ota_host, ota_path, NULL) == CY_RSLT_SUCCESS) {
+        	printf("OTA started...\r\n");
         	is_ota_in_progress = true;
         } else {
-        	printf("OTA starts unsuccessfully.\r\n");
+        	printf("ERROR: OTA failed to start!\r\n");
         	is_ota_in_progress = false;
         }
 #endif
@@ -218,10 +212,6 @@ static void on_command(IotclC2dEventData data) {
 
     const char *command = iotcl_c2d_get_command(data);
     const char *ack_id = iotcl_c2d_get_ack_id(data);
-    if (ack_id) {
-    	printf("WARNING: Acknowledgments are not supported with this software version!");
-    	ack_id = NULL; // Force code flow to be the same as if there was no ACK.
-    }
     if (command) {
     	bool arg_parsing_success;
         printf("Command %s received with %s ACK ID\n", command, ack_id ? ack_id : "no");
@@ -235,8 +225,8 @@ static void on_command(IotclC2dEventData data) {
         } else if (parse_on_off_command(command, DEMO_MODE_CMD,  &arg_parsing_success, &is_demo_mode, &message)) {
         	command_success = arg_parsing_success;
         } else {
-            printf("Failed to parse command\n");
-        	message = "Unrecognized command";
+            printf("Unknown command \"%s\"\n", command);
+        	message = "Unkown command";
         }
     } else {
     	printf("Failed to parse command. Command missing?\n");
@@ -263,7 +253,7 @@ static cy_rslt_t publish_telemetry(void) {
     // Optional. The first time you create a data point, the current timestamp will be automatically added
     // TelemetryAddWith* calls are only required if sending multiple data points in one packet.
     iotcl_telemetry_set_string(msg, "version", APP_VERSION);
-    iotcl_telemetry_set_number(msg, "random", random() % 100); // test some random numbers
+    iotcl_telemetry_set_number(msg, "random", rand() % 100); // test some random numbers
 
     iotcl_mqtt_send_telemetry(msg, false);
     iotcl_telemetry_destroy(msg);
@@ -279,7 +269,7 @@ void app_task(void *pvParameters) {
     printf("Starting The App Task\n");
     printf("===============================================================\n\n");
 
-#if defined(OTA_SUPPORT) && defined(OTA_USE_EXTERNAL_FLASH)
+#if defined(IOTC_OTA_SUPPORT) && defined(OTA_USE_EXTERNAL_FLASH)
     /* We need to init external flash */
 	iotc_ota_init();
 
@@ -361,8 +351,9 @@ void app_task(void *pvParameters) {
 
         int max_messages = is_demo_mode ? 600 : 30; // non-demo = 5 seconds * 10 * 30 = 25 minutes ; demo = 5 seconds * 10 * 600 = 8 hours
         for (int j = 0; iotconnect_sdk_is_connected() && j < max_messages; j++) {
-#ifdef OTA_SUPPORT
+#ifdef IOTC_OTA_SUPPORT
         	if (is_ota_in_progress == true) {
+        		printf("... ...OTA is in progress and stop publishing data\n");
                 break;
         	}
 #endif
@@ -370,22 +361,26 @@ void app_task(void *pvParameters) {
         	if (result != CY_RSLT_SUCCESS) {
         		break;
         	}
-            vTaskDelay(pdMS_TO_TICKS(10000));
+        	// Wait up to 10 seconds for any inbound messages to be processed
+        	// while introducing a purposeful delay between telemetry messages
+            iotconnect_sdk_poll_inbound_mq(10000);
         }
         iotconnect_sdk_disconnect();
+        if (is_ota_in_progress == true) {
+        	break;
+        }
     }
     iotconnect_sdk_deinit();
 
-	printf("\nAppTask Done.\nTerminating the AppTask...\n");
+	printf("\nAppTask Done.\n");
 	while (1) {
 		taskYIELD();
 	}
     return;
 
     exit_cleanup:
-	printf("\nError encountered. AppTask Done.\nTerminating the AppTask...\n");
+	printf("\nError encountered. AppTask Done.\n");
 	while (1) {
 		taskYIELD();
 	}
-
 }

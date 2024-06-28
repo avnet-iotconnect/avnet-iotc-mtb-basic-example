@@ -1,6 +1,5 @@
-$(SEARCH_avnet-iotc-mtb-sdk)/lib/ota-update
-
 # Indirectly, we need the libraries/standard from this AWS SDK dependency for coreHTTP and coreMQTT
+# Having more of these files to be compiled into the project causes windows path length issues
 $(SEARCH_aws-iot-device-sdk-embedded-C)/libraries/3rdparty/
 $(SEARCH_aws-iot-device-sdk-embedded-C)/libraries/aws/
 $(SEARCH_aws-iot-device-sdk-embedded-C)/demos/

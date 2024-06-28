@@ -1,13 +1,13 @@
 /******************************************************************************
-* File Name:   core_mqtt_config.h
+* File Name:   flash_qspi.h
 *
-* Description: This file contains the configuration macros for the MQTT library.
+* Description: This file contains the declaration of QSPI flash related APIs
 *
 * Related Document: See README.md
 *
 *
 *******************************************************************************
-* Copyright 2020-2021, Cypress Semiconductor Corporation (an Infineon company) or
+* Copyright 2023-2024, Cypress Semiconductor Corporation (an Infineon company) or
 * an affiliate of Cypress Semiconductor Corporation.  All rights reserved.
 *
 * This software, including source code, documentation and related
@@ -39,44 +39,30 @@
 * so agrees to indemnify Cypress against all liability.
 *******************************************************************************/
 
-#ifndef CORE_MQTT_CONFIG_H_
-#define CORE_MQTT_CONFIG_H_
+#ifndef _FLASH_QSPI_H
+#define _FLASH_QSPI_H
 
-/**
- * @brief Determines the maximum number of MQTT PUBLISH messages, pending
- * acknowledgement at a time, that are supported for incoming and outgoing
- * direction of messages, separately.
- *
- * QoS 1 and 2 MQTT PUBLISH packets require acknowledgement from the server before
- * they can be completed. While they are awaiting the acknowledgement, the
- * client must maintain information about their state. The value of this
- * macro sets the limit on how many simultaneous PUBLISH states an MQTT
- * context maintains, separately, for both incoming and outgoing direction of
- * PUBLISH packets.
- *
- * @note This definition must exist in order to compile. 10U is a typical value
- * used in the MQTT demos.
- */
-#define MQTT_STATE_ARRAY_MAX_COUNT              ( 10U )
+#ifdef OTA_USE_EXTERNAL_FLASH
 
-/**
- * @brief Retry the count for reading CONNACK from the network.
- *
- * MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT will be used only when the
- * timeoutMs parameter of #MQTT_Connect() is passed as 0. The transport
- * receive for CONNACK will be retried MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
- * times before timing out. A value of 0 for this config will cause the
- * transport receive for CONNACK to be invoked only once.
- */
-#define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 2U )
+#include <stdint.h>
+#include "cy_pdl.h"
 
-/**
- * @brief Number of milliseconds to wait for a ping response to a ping
- * request as part of the keepalive mechanism.
- *
- * If a ping response is not received before this timeout,
- * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
- */
-#define MQTT_PINGRESP_TIMEOUT_MS                ( 5000U )
+cy_en_smif_status_t qspi_init_sfdp(uint32_t smif_id);
+cy_en_smif_status_t qspi_init(cy_stc_smif_block_config_t *blk_config);
+cy_en_smif_status_t qspi_init_hardware(void);
+uint32_t qspi_get_prog_size(void);
+uint32_t qspi_get_erase_size(void);
+uint32_t qspi_get_mem_size(void);
 
-#endif /* ifndef CORE_MQTT_CONFIG_H_ */
+SMIF_Type *qspi_get_device(void);
+cy_stc_smif_context_t *qspi_get_context(void);
+cy_stc_smif_mem_config_t *qspi_get_memory_config(uint8_t index);
+
+void qspi_deinit(uint32_t smif_id);
+
+void qspi_set_mode(cy_en_smif_mode_t mode);
+cy_en_smif_mode_t qspi_get_mode(void);
+
+#endif /* OTA_USE_EXTERNAL_FLASH */
+
+#endif /* _FLASH_QSPI_H */
