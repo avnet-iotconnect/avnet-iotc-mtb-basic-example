@@ -165,10 +165,10 @@ static void on_ota(IotclC2dEventData data) {
 #ifdef IOTC_OTA_SUPPORT
         /* Start the OTA task */
         if(iotc_ota_start(IOTCONNECT_CONNECTION_TYPE, ota_host, ota_path, NULL) == CY_RSLT_SUCCESS) {
-        	printf("OTA starts successfully.\r\n");
+        	printf("OTA started...\r\n");
         	is_ota_in_progress = true;
         } else {
-        	printf("OTA starts unsuccessfully.\r\n");
+        	printf("ERROR: OTA failed to start!\r\n");
         	is_ota_in_progress = false;
         }
 #endif
