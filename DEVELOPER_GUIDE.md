@@ -6,10 +6,6 @@ the [README.md](README.md).
 
 The project has been tested with the Eclipse option in Project Creator and only supports the ARM_GCC (Eclipse default) toolchain.
 
-For an example with OTA support, you must use the earlier version of this
-software under the `release-v4.0.0` label, along with ModusToolbox&trade; 3.1.
-and [Local Manifest Setup](DEVELOPER_LOCAL_SETUP.md#local-manifest-setup)
-
 ## Prerequisites
 * PC with Windows. The project is tested with Windows 10, though the setup should work with Linux or Mac as well.
 * USB-A to micro-USB data cable
@@ -17,7 +13,7 @@ and [Local Manifest Setup](DEVELOPER_LOCAL_SETUP.md#local-manifest-setup)
 * A serial terminal application such as [Tera Term](https://ttssh2.osdn.jp/index.html.en) or a browser-based application like [Google Chrome Labs Serial Terminal](https://googlechromelabs.github.io/serial-terminal/)
 * A registered [myInfineon Account](https://www.infineon.com/sec/login)
 
-For OTA Support, you must use this application with ModusToolbox&trade; 3.1. 
+For OTA Support, you must use this application with ModusToolbox&trade; 3.2. 
 
 ## Hardware Setup
 * Connect the board to a USB port on your PC. A new USB device should be detected.
@@ -49,12 +45,12 @@ The setup tool may require you to log into your Infineon account.
 - Open the Project Creator.
 - Select one of the supported boards from [README.md](README.md) and click *Next*.
 - At the top of the window, choose a path where the project will be installed.
-On Windows, ensure that this path is *short* starting from a root of a drive like *C:\iotc-xensiv*,
+On Windows, ensure that this path is *short* starting from a root of a drive like *C:\iotc-basic*,
 or else ong paths will trigger the 256 Windows path limit and cause compiling errors. Refer to the
 [Troubleshooting](#troubleshooting) section of this document for more information.
 - Select *Eclipse IDE for Modus Toolbox&trade;* in the pulldown below the installation path. 
 VsCode integration and other tools may work, but actively tested and not a part of this guide.
-- Select the *Avnet IoTConnect Optiga Example* from the *Peripherals* Category.
+- Select the *Avnet IoTConnect Basic Example* from the *Wi-Fi* Category.
 - Click the *Create* button at the bottom of the screen.
 - Open the installed Eclipse IDE For Modus Toolbox&trade; application.
 - When prompted for the workspace, choose an arbitrary location for your workspace and click the *Launch* button.
@@ -78,7 +74,7 @@ create the device in the steps at [Cloud Account Setup](#cloud-account-setup) be
 Generated device unique ID (DUID) is: psoc6-xxxxxxxx
 ```
 - Once the Cloud Account Setup is complete,
-At **Avnet_IoTConnect_Optiga_Example/config/** modify **app_config.h** per your
+In the **config/** application directory modify **app_config.h** per your
 IoTConnect device setup **wifi_config.h** per your WiFi connection settings.
 - Debug or Program the application.
 
@@ -113,7 +109,7 @@ An IoTConnect *Device Template* will need to be created or imported.
 > **Note:**  
 > For more information on [Template Management](https://docs.iotconnect.io/iotconnect/user-manuals/devices/template-management/) please see the [IoTConnect Documentation](https://iotconnect.io) website.
 
-#### IoTConnect Device Creation
+#### IoTConnect Device Creation and Setup
 
 * Create a new device in the IoTConnect portal. (Follow the [Create a New Device](https://github.com/avnet-iotconnect/avnet-iotconnect.github.io/blob/main/documentation/iotconnect/create_new_device.md) guide for a detailed walkthrough.)
 * Enter the **DUID** noted from earlier into the *Unique ID* field
@@ -158,17 +154,13 @@ The port of the OTA feature is rudimentary for purpose demonstration and not rec
 If you wish to support the OTA functionality for your board, please learn more from the README of the
 [mtb-example-ota-https](https://github.com/Infineon/mtb-example-ota-https) sample.
 
-> [!NOTE]
-> * The OTA feature is not supported with CY8CKIT-062-WIFI-BT.
-> * The OTA feature only works with IoTConnect-Azure, not IoTConnect-AWS. We will support OTA in future on IoTConnect-AWS. 
-
 In order to add ioTConnect OTA support to this project, 
-do the following steps once you have opened this project in Eclipse:
+do the following steps only once, **in this specific order**, once you have opened this project in Eclipse:
 
 * Select this application in the top left panel and open the Library Manager from the bottom left Quick Panel. 
 Note that the library manager may take some time appear in the quick panel.
-* Clik the *Add Library* button and add **ota-update** version *release-v4.2.0* 
- and **ota-bootloader-abstraction** version *release-v1.2.0* libraries.
+* Clik the *Add Library* button and add **ota-update** version *release-v4.2.1* 
+ and **ota-bootloader-abstraction** version *release-v1.2.1* libraries.
 * Locate the `OTA_SUPPORT=0` line in the Makefile and set OTA_SUPPORT to 1:
 ```makefile
 OTA_SUPPORT=1
@@ -181,12 +173,55 @@ OTA_SUPPORT=1
   * If you cloned this project's repo or have your own repository, this part of the setup can be streamlined by simply
   renaming the templates-ota directory to ``templates`` before the project is imported with Project Creator. 
 
-> The content of the templates-ota directory is not compatible with OTA_SUPPORT being disabled, so if you need to 
+> The modifications from templates-ota directory are not compatible with OTA_SUPPORT being disabled, so if you need to 
 > switch to OTA_SUPPORT=0, it is recommended that you re-create this project with the Project Creator.
-* Update the "CY_OTA_CHUNK_SIZE" to 0x4000 in the lib file(mtb_shared/ota-udpate/\<tag>/include/cy_ota_api.h).
-* Update the chunk buffer to "uint8_t chunk_buffer[CY_OTA_CHUNK_SIZE + 1024]" in the lib file (mtb_shared/ota-update/\<tag>/source/cy_ota_internal.h).
+* For IoTConnect AWS, modify the following source at mtb_shared/ota-update/\<version>/source/cy_ota_http.c:
+  * Modify cy_ota_http_disconnect_callback near line 489 to indicate that the connection dropped:
+```C
+static void cy_ota_http_disconnect_callback(cy_http_client_t handle, cy_http_client_disconn_type_t type, void *user_data)
+{
+    /* for compiler warnings */
+    (void)handle;
+    (void)type;
+    (void)user_data;
 
-We now need to build the *MCUboot-Based Basic Bootloader* application separately and load it onto the board.
+    cy_ota_context_t *ctx = (cy_ota_context_t *) user_data;
+    ctx->http.connection_established = false;
+
+    /* HTTP is now Synchronous.
+...
+```
+  * Inside the while loop near line 1023, append the reconnect logic:
+```C
+    while( ( (ctx->ota_storage_context.total_bytes_written == 0) ||
+              (ctx->ota_storage_context.total_bytes_written < ctx->ota_storage_context.total_image_size) ) &&
+            (range_end > range_start) )
+    {
+    	// AWS S3 will disconnect us after the 100th chunk. Try to reconnect here...
+    	if (ctx->http.connection_established != true && ctx->http.connection != NULL) {
+    	    result = cy_http_client_connect(ctx->http.connection, CY_OTA_HTTP_TIMEOUT_SEND, CY_OTA_HTTP_TIMEOUT_RECEIVE);
+    	    if(result == CY_RSLT_SUCCESS) {
+        	    ctx->http.connection_established = true;
+                cy_ota_log_msg(CYLF_MIDDLEWARE, CY_LOG_DEBUG, "Got disconnected... Reconnect successful.");
+    	    }
+    	    else {
+                cy_ota_log_msg(CYLF_MIDDLEWARE, CY_LOG_DEBUG, "Got disconnected... Reconnect failed!");
+    	    }
+    	    // else we will simply fail below
+    	}
+        cy_ota_log_msg(CYLF_MIDDLEWARE, CY_LOG_DEBUG, "while(ctx->ota_storage_context.total_bytes_written (%ld) < (%ld) ctx->total_image_size)\n", ctx->ota_storage_context.total_bytes_written, ctx->ota_storage_context.total_image_size);
+...
+```
+* Update the chunk buffer to "uint8_t chunk_buffer[CY_OTA_CHUNK_SIZE + 1024]" at *mtb_shared/ota-update/\<version>/source/cy_ota_internal.h*.
+* You can increase the "CY_OTA_CHUNK_SIZE" at *mtb_shared/ota-update/\<version>/include/cy_ota_api.h* 
+up to 8192 for AWS or 32768 for Azure in order to speed up the download up to 2x. 
+* Log into your IoTConnect account and ensure that the toggle for Settings -> Configurations -> Firmware configurations is enabled.
+* Click on *Firmware configurations* and ensure that the *OTA URL Expiry* is set to at least 15 (minutes).
+IoTConnect provides a signed URL that's valid for 5 minutes by default, so it will expire before the download completes 
+unless the expiry time is increased.
+
+We need to build the *MCUboot-Based Basic Bootloader* application separately 
+and load it onto the board (only once).
 The following steps are compatible with the bootloader sample application version *release-7.0.0*
 and if any issues are encountered, you should clone 
 the [mtb-example-mcuboot-basic](https://github.com/Infineon/mtb-example-mcuboot-basic/tree/release-v7.0.0) 
