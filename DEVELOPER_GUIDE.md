@@ -159,8 +159,8 @@ do the following steps only once, **in this specific order**, once you have open
 
 * Select this application in the top left panel and open the Library Manager from the bottom left Quick Panel. 
 Note that the library manager may take some time appear in the quick panel.
-* Clik the *Add Library* button and add **ota-update** version *release-v4.2.1* 
- and **ota-bootloader-abstraction** version *release-v1.2.1* libraries.
+* Clik the *Add Library* button and add **ota-update** version *release-v4.2.0* 
+ and **ota-bootloader-abstraction** version *release-v1.2.0* libraries.
 * Locate the `OTA_SUPPORT=0` line in the Makefile and set OTA_SUPPORT to 1:
 ```makefile
 OTA_SUPPORT=1
@@ -175,50 +175,17 @@ OTA_SUPPORT=1
 
 > The modifications from templates-ota directory are not compatible with OTA_SUPPORT being disabled, so if you need to 
 > switch to OTA_SUPPORT=0, it is recommended that you re-create this project with the Project Creator.
-* For IoTConnect AWS, modify the following source at mtb_shared/ota-update/\<version>/source/cy_ota_http.c:
-  * Modify cy_ota_http_disconnect_callback near line 489 to indicate that the connection dropped:
-```C
-static void cy_ota_http_disconnect_callback(cy_http_client_t handle, cy_http_client_disconn_type_t type, void *user_data)
-{
-    /* for compiler warnings */
-    (void)handle;
-    (void)type;
-    (void)user_data;
-
-    cy_ota_context_t *ctx = (cy_ota_context_t *) user_data;
-    ctx->http.connection_established = false;
-
-    /* HTTP is now Synchronous.
-...
-```
-  * Inside the while loop near line 1023, append the reconnect logic:
-```C
-    while( ( (ctx->ota_storage_context.total_bytes_written == 0) ||
-              (ctx->ota_storage_context.total_bytes_written < ctx->ota_storage_context.total_image_size) ) &&
-            (range_end > range_start) )
-    {
-    	// AWS S3 will disconnect us after the 100th chunk. Try to reconnect here...
-    	if (ctx->http.connection_established != true && ctx->http.connection != NULL) {
-    	    result = cy_http_client_connect(ctx->http.connection, CY_OTA_HTTP_TIMEOUT_SEND, CY_OTA_HTTP_TIMEOUT_RECEIVE);
-    	    if(result == CY_RSLT_SUCCESS) {
-        	    ctx->http.connection_established = true;
-                cy_ota_log_msg(CYLF_MIDDLEWARE, CY_LOG_DEBUG, "Got disconnected... Reconnect successful.");
-    	    }
-    	    else {
-                cy_ota_log_msg(CYLF_MIDDLEWARE, CY_LOG_DEBUG, "Got disconnected... Reconnect failed!");
-    	    }
-    	    // else we will simply fail below
-    	}
-        cy_ota_log_msg(CYLF_MIDDLEWARE, CY_LOG_DEBUG, "while(ctx->ota_storage_context.total_bytes_written (%ld) < (%ld) ctx->total_image_size)\n", ctx->ota_storage_context.total_bytes_written, ctx->ota_storage_context.total_image_size);
-...
-```
-* Update the chunk buffer to "uint8_t chunk_buffer[CY_OTA_CHUNK_SIZE + 1024]" at *mtb_shared/ota-update/\<version>/source/cy_ota_internal.h*.
-* You can increase the "CY_OTA_CHUNK_SIZE" at *mtb_shared/ota-update/\<version>/include/cy_ota_api.h* 
-up to 8192 for AWS or 32768 for Azure in order to speed up the download up to 2x. 
 * Log into your IoTConnect account and ensure that the toggle for Settings -> Configurations -> Firmware configurations is enabled.
+* Update the chunk buffer to "uint8_t chunk_buffer[CY_OTA_CHUNK_SIZE + 1024]" at *mtb_shared/ota-update/\<version>/source/cy_ota_internal.h*.
+* If on AWS, please note that OTA support in currently work in progress.
+We have had some limited success with changes suggested the [OTA_AWS.md](OTA_AWS.md), but these modifications 
+to the Infineon's OTA library gave us inconsistent results.
+* If on Azure, you can achieve up to around four times reduction in download time 
+by increasing "CY_OTA_CHUNK_SIZE" at *mtb_shared/ota-update/\<version>/include/cy_ota_api.h* 
+up to 65536 bytes.
 * Click on *Firmware configurations* and ensure that the *OTA URL Expiry* is set to at least 15 (minutes).
-IoTConnect provides a signed URL that's valid for 5 minutes by default, so it will expire before the download completes 
-unless the expiry time is increased.
+IoTConnect provides a signed URL that's valid for 5 minutes by default.
+Increasing this value will ensure that the URL does not expire before the download completes.
 
 We need to build the *MCUboot-Based Basic Bootloader* application separately 
 and load it onto the board (only once).
