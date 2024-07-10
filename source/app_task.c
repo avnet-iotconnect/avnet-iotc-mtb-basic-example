@@ -63,11 +63,6 @@
 #define APP_VERSION "02.01.00"
 static bool is_demo_mode = false;
 
-#ifdef IOTC_OTA_SUPPORT
-static bool is_ota_in_progress = false;
-#endif
-
-
 static void on_connection_status(IotConnectConnectionStatus status) {
     // Add your own status handling
     switch (status) {
@@ -148,15 +143,21 @@ static cy_rslt_t wifi_connect(void) {
 }
 
 static void on_ota(IotclC2dEventData data) {
+    const char *ack_id = iotcl_c2d_get_ack_id(data);
+    if (ack_id == NULL){
+    	printf("ACK ID is invalid.\n");
+    	return;
+    }
+
     const char *ota_host = iotcl_c2d_get_ota_url_hostname(data, 0);
     if (ota_host == NULL){
-    	printf("OTA host is invalid.\r\n");
+    	printf("OTA host is invalid.\n");
     	return;
     }
 
     const char *ota_path = iotcl_c2d_get_ota_url_resource(data, 0);
     if (ota_path == NULL) {
-    	printf("OTA resource is invalid.\r\n");
+    	printf("OTA resource is invalid.\n");
     	return;
     }
 
@@ -164,14 +165,34 @@ static void on_ota(IotclC2dEventData data) {
 
 #ifdef IOTC_OTA_SUPPORT
         /* Start the OTA task */
-        if(iotc_ota_start(IOTCONNECT_CONNECTION_TYPE, ota_host, ota_path, NULL) == CY_RSLT_SUCCESS) {
-        	printf("OTA started...\r\n");
-        	is_ota_in_progress = true;
+		iotcl_mqtt_send_ota_ack( ack_id, IOTCL_C2D_EVT_OTA_DOWNLOADING, NULL);
+
+		const char* ota_err_str = NULL;
+        if(CY_RSLT_SUCCESS == iotc_ota_run(IOTCONNECT_CONNECTION_TYPE, ota_host, ota_path, NULL)) {
+        	ota_err_str = iotc_ota_get_download_error_string();
+        	printf("OTA completed with status: %s\n", ota_err_str ? ota_err_str : "No error");
         } else {
-        	printf("ERROR: OTA failed to start!\r\n");
-        	is_ota_in_progress = false;
+        	printf("ERROR: OTA failed to start!\n");
+        	ota_err_str = "OTA failed to start";
         }
+		iotcl_mqtt_send_ota_ack(
+			ack_id,
+			ota_err_str ? IOTCL_C2D_EVT_OTA_DOWNLOAD_FAILED : IOTCL_C2D_EVT_OTA_DOWNLOAD_DONE,
+			ota_err_str
+		);
+		if (NULL == ota_err_str) {
+        	printf("The board will reset in 5 seconds....");
+			vTaskDelay(pdMS_TO_TICKS(5000));
+			iotc_ota_system_reset();
+		}
+#else
+		iotcl_mqtt_send_ota_ack(
+			ack_id,
+			IOTCL_C2D_EVT_OTA_DOWNLOAD_FAILED,
+			"OTA not implemented"
+		);
 #endif
+
 }
 
 // returns success on matching the expected format. Returns is_on, assuming "on" for true, "off" for false
@@ -351,12 +372,6 @@ void app_task(void *pvParameters) {
 
         int max_messages = is_demo_mode ? 600 : 30; // non-demo = 5 seconds * 10 * 30 = 25 minutes ; demo = 5 seconds * 10 * 600 = 8 hours
         for (int j = 0; iotconnect_sdk_is_connected() && j < max_messages; j++) {
-#ifdef IOTC_OTA_SUPPORT
-        	if (is_ota_in_progress == true) {
-        		printf("... ...OTA is in progress and stop publishing data\n");
-                break;
-        	}
-#endif
         	cy_rslt_t result = publish_telemetry();
         	if (result != CY_RSLT_SUCCESS) {
         		break;
@@ -366,9 +381,6 @@ void app_task(void *pvParameters) {
             iotconnect_sdk_poll_inbound_mq(10000);
         }
         iotconnect_sdk_disconnect();
-        if (is_ota_in_progress == true) {
-        	break;
-        }
     }
     iotconnect_sdk_deinit();
 

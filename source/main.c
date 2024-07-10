@@ -78,11 +78,10 @@ volatile int uxTopUsedPriority;
 
 // A VERY crude implementation of log output so we can at least see some messages
 int app_log_output_callback(CY_LOG_FACILITY_T facility, CY_LOG_LEVEL_T level, char *logmsg) {
-  (void)facility;     // Can be used to decide to reduce output or send output to remote logging
-  (void)level;        // Can be used to decide to reduce output, although the output has already been
+	(void)facility;     // Can be used to decide to reduce output or send output to remote logging
+	(void)level;        // Can be used to decide to reduce output, although the output has already been
                       // limited by the log routines
-
-  return printf( "%s", logmsg);   // print directly to console
+	return printf("%s", logmsg);   // print directly to console
 }
 
 // A VERY crude implementation for obtaining timestamp (always 0) for logs so we can at least see some messages
