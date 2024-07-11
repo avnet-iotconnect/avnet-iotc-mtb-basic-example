@@ -48,7 +48,7 @@ static void cy_ota_http_disconnect_callback(cy_http_client_t handle, cy_http_cli
     	    result = cy_http_client_connect(ctx->http.connection, CY_OTA_HTTP_TIMEOUT_SEND, CY_OTA_HTTP_TIMEOUT_RECEIVE);
     	    if(result == CY_RSLT_SUCCESS) 
     	    {
-        	    ctx->http.connection_established = true;
+                ctx->http.connection_established = true;
                 cy_ota_log_msg(CYLF_MIDDLEWARE, CY_LOG_INFO, "Got disconnected... Reconnect successful.");
     	    }
     	    else 
