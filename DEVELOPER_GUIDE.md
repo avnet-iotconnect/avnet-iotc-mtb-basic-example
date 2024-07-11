@@ -176,6 +176,9 @@ OTA_SUPPORT=1
 > The modifications from templates-ota directory are not compatible with OTA_SUPPORT being disabled, so if you need to 
 > switch to OTA_SUPPORT=0, it is recommended that you re-create this project with the Project Creator.
 * Log into your IoTConnect account and ensure that the toggle for Settings -> Configurations -> Firmware configurations is enabled.
+* Click on *Firmware configurations* and ensure that the *OTA URL Expiry* is set to at least 25 (minutes).
+IoTConnect provides a signed URL that's valid for 5 minutes by default.
+Increasing this value will ensure that the URL does not expire before the download completes.
 * Update the chunk buffer to "uint8_t chunk_buffer[CY_OTA_CHUNK_SIZE + 1024]" at *mtb_shared/ota-update/\<version>/source/cy_ota_internal.h*.
 * If on AWS, please note that OTA support in currently work in progress.
 We have had some limited success with changes suggested the [OTA_AWS.md](OTA_AWS.md), but these modifications 
@@ -183,9 +186,6 @@ to the Infineon's OTA library gave us inconsistent results.
 * If on Azure, you can achieve up to around four times reduction in download time 
 by increasing "CY_OTA_CHUNK_SIZE" at *mtb_shared/ota-update/\<version>/include/cy_ota_api.h* 
 up to 65536 bytes.
-* Click on *Firmware configurations* and ensure that the *OTA URL Expiry* is set to at least 15 (minutes).
-IoTConnect provides a signed URL that's valid for 5 minutes by default.
-Increasing this value will ensure that the URL does not expire before the download completes.
 
 We need to build the *MCUboot-Based Basic Bootloader* application separately 
 and load it onto the board (only once).

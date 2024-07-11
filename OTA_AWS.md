@@ -8,9 +8,9 @@ We are investigating these consistency issues.
 CY_OTA_HTTP_FILENAME_SIZE and CY_OTA_MQTT_FILENAME_BUFF_SIZE 
 (MQTT as well due to a bug where the wrong value is used for an HTTP related buffer size)
 to 800 at *mtb_shared/ota-update/\<version>/include/cy_ota_api.h*  
-* S3 will allow only up to 100 range requests until it forcefully disconnect an existing connection
+* S3 will allow only up to 100 range requests until it forcefully disconnects an existing connection
 which means that the CY_OTA_CHUNK_SIZE needs to be qat least 10k to download the 1MB firmware file.
-However, the ota-update library is not stable with larger chunk sizes, so the qucik and dirty way 
+However, the ota-update library is not stable with larger chunk sizes, so the quick and dirty way 
 to address this is a crude patch
 applying a crude patch the cy_ota_http.c source file to re-try the connection during the download
 after the 100th range request.
@@ -18,7 +18,7 @@ after the 100th range request.
 To add the retry logic, modify the following source at mtb_shared/ota-update/\<version>/source/cy_ota_http.c. 
   This modification seems to work best with the original CY_OTA_CHUNK_SIZE of 4096:
 
-    * Modify cy_ota_http_disconnect_callback near line 489 to indicate that the connection dropped:
+* Modify cy_ota_http_disconnect_callback near line 489 to indicate that the connection dropped:
 
 ```C
 static void cy_ota_http_disconnect_callback(cy_http_client_t handle, cy_http_client_disconn_type_t type, void *user_data)
@@ -34,7 +34,8 @@ static void cy_ota_http_disconnect_callback(cy_http_client_t handle, cy_http_cli
     /* HTTP is now Synchronous.
 ...
 ```
-    * Inside the while loop near line 1023, append the reconnect logic:
+
+* Inside the while loop near line 1023, append the reconnect logic:
 
 ```C
     while( ( (ctx->ota_storage_context.total_bytes_written == 0) ||
