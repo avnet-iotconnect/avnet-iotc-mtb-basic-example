@@ -78,11 +78,10 @@ volatile int uxTopUsedPriority;
 
 // A VERY crude implementation of log output so we can at least see some messages
 int app_log_output_callback(CY_LOG_FACILITY_T facility, CY_LOG_LEVEL_T level, char *logmsg) {
-  (void)facility;     // Can be used to decide to reduce output or send output to remote logging
-  (void)level;        // Can be used to decide to reduce output, although the output has already been
+	(void)facility;     // Can be used to decide to reduce output or send output to remote logging
+	(void)level;        // Can be used to decide to reduce output, although the output has already been
                       // limited by the log routines
-
-  return printf( "%s\n", logmsg);   // print directly to console
+	return printf("%s", logmsg);   // print directly to console
 }
 
 // A VERY crude implementation for obtaining timestamp (always 0) for logs so we can at least see some messages
@@ -103,7 +102,7 @@ int main() {
     result = cyhal_wdt_init(&wdt_obj, cyhal_wdt_get_max_timeout_ms());
     CY_ASSERT(CY_RSLT_SUCCESS == result);
     cyhal_wdt_free(&wdt_obj);
-#endif /* #if defined (CY_DEVICE_SECURE) */
+#endif /* #if defined (CY_DEVICE_SECURE) || defined (IOTC_OTA_SUPPORT) */
 
     /* This enables RTOS aware debugging in OpenOCD. */
     uxTopUsedPriority = configMAX_PRIORITIES - 1;
@@ -124,9 +123,18 @@ int main() {
     /* default for all logging to WARNING */
     cy_log_init(CY_LOG_WARNING, app_log_output_callback, app_log_time);
 
-    // Uncomment this line to get more info from HTTP and similar
-    // if encountering issues
-    // cy_log_set_facility_level(CYLF_MIDDLEWARE, CY_LOG_INFO);
+    // Use CY_LOG_INFO or debug here to get more info from HTTP and similar
+    // if encountering issues, but OTA on AWS will likely encounter issues
+    // since it appears to be timing sensitive
+    CY_LOG_LEVEL_T mw_log_level = CY_LOG_WARNING;
+    cy_log_set_facility_level(CYLF_MIDDLEWARE, mw_log_level);
+
+#if defined (IOTC_OTA_SUPPORT)
+    // The OTA v4.2.0 agent has a bug where it overrides the value of middleware log level to CY_LOG_ERR
+    // This is the workaround for the bug when we need to something other than CY_LOG_ERR.
+    extern CY_LOG_LEVEL_T ota_logging_level;
+    ota_logging_level = mw_log_level;
+#endif
 
     /* Create the MQTT Client task. */
     xTaskCreate(app_task, "App Task", APP_TASK_STACK_SIZE, NULL, APP_TASK_PRIORITY, NULL);
