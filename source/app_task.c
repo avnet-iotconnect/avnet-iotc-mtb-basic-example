@@ -165,7 +165,7 @@ static void on_ota(IotclC2dEventData data) {
 
 #ifdef IOTC_OTA_SUPPORT
         /* Start the OTA task */
-		iotcl_mqtt_send_ota_ack( ack_id, IOTCL_C2D_EVT_OTA_DOWNLOADING, NULL);
+		iotcl_mqtt_send_ota_ack(ack_id, IOTCL_C2D_EVT_OTA_DOWNLOADING, NULL);
 
 		const char* ota_err_str = NULL;
         if(CY_RSLT_SUCCESS == iotc_ota_run(IOTCONNECT_CONNECTION_TYPE, ota_host, ota_path, NULL)) {
@@ -180,8 +180,9 @@ static void on_ota(IotclC2dEventData data) {
 			ota_err_str ? IOTCL_C2D_EVT_OTA_DOWNLOAD_FAILED : IOTCL_C2D_EVT_OTA_DOWNLOAD_DONE,
 			ota_err_str
 		);
+
 		if (NULL == ota_err_str) {
-        	printf("The board will reset in 5 seconds....");
+        	printf("The board will reset in 5 seconds....\n");
 			vTaskDelay(pdMS_TO_TICKS(5000));
 			iotc_ota_system_reset();
 		}
