@@ -19,6 +19,9 @@
 
 #define IOTCONNECT_DUID_PREFIX "psoc6-"
 
+// Specify IotConnectConnectionType (from iotconnect.h)
+// For AWS: IOTC_CT_AWS
+// For Azure: IOTC_CT_AZURE
 #define IOTCONNECT_CONNECTION_TYPE IOTC_CT_UNDEFINED
 
 // PEM format certificate and private key, if using X509 type auth.
