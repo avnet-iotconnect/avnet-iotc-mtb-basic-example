@@ -6,7 +6,7 @@ the [README.md](README.md).
 
 ## Supported Toolchains (make variable 'TOOLCHAIN')
 
-* GNU Arm® Embedded Compiler v11.3.1 (GCC_ARM) - Default value of TOOLCHAIN
+* GNU Arm® Embedded Compiler (GCC_ARM) - Default value of TOOLCHAIN
 
 The project has been tested with the Eclipse option in Project Creator.
 
