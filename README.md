@@ -5,6 +5,9 @@ Avnet IoTConnect basic example for Infineon's ModusToolbox IDE and framework.
 The project uses the following dependent projects:
 * [avnet-iotc-mtb-sdk](https://github.com/avnet-iotconnect/avnet-iotc-mtb-sdk)
 
+## Supported Toolchains (make variable 'TOOLCHAIN')
+GNU Arm® Embedded Compiler (GCC_ARM) - Default value of TOOLCHAIN
+
 ## Supported Boards
 The code has been developed and tested with MTB 3.1 and the boards below:
 - [PSoC&trade; 6 Wi-Fi Bluetooth&reg; pioneer kit](https://www.cypress.com/CY8CKIT-062-WiFi-BT) (`CY8CKIT-062-WIFI-BT`)
