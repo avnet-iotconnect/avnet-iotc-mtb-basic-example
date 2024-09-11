@@ -6,10 +6,10 @@ The project uses the following dependent projects:
 * [avnet-iotc-mtb-sdk](https://github.com/avnet-iotconnect/avnet-iotc-mtb-sdk)
 
 ## Supported Toolchains (make variable 'TOOLCHAIN')
-GNU Arm® Embedded Compiler (GCC_ARM) - Default value of TOOLCHAIN
+* GNU Arm® Embedded Compiler (GCC_ARM) - Default value of TOOLCHAIN
 
 ## Supported Boards
-The code has been developed and tested with MTB 3.1 and the boards below:
+The code has been developed and tested with MTB 3.2, with Eclipse, and the boards below:
 - [PSoC&trade; 6 Wi-Fi Bluetooth&reg; pioneer kit](https://www.cypress.com/CY8CKIT-062-WiFi-BT) (`CY8CKIT-062-WIFI-BT`)
 - [PSoC&trade; 6 Wi-Fi Bluetooth&reg; prototyping kit](https://www.infineon.com/cms/en/product/evaluation-boards/cy8cproto-062-4343w/) (`CY8CPROTO-062-4343W`)
 - [PSoC&trade; 62S2 Wi-Fi Bluetooth&reg; pioneer kit](https://www.infineon.com/cms/en/product/evaluation-boards/cy8ckit-062s2-43012/) (`CY8CKIT-062S2-43012`)
