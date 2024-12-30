@@ -163,8 +163,8 @@ do the following steps only once, **in this specific order**, once you have open
 
 * Select this application in the top left panel and open the Library Manager from the bottom left Quick Panel. 
 Note that the library manager may take some time appear in the quick panel.
-* Clik the *Add Library* button and add **ota-update** version *release-v4.2.0* 
- and **ota-bootloader-abstraction** version *release-v1.2.0* libraries.
+* Clik the *Add Library* button and add **ota-update** version *release-v4.3.3* 
+ and **ota-bootloader-abstraction** version *release-v1.5.2* libraries.
 * Locate the `OTA_SUPPORT=0` line in the Makefile and set OTA_SUPPORT to 1:
 ```makefile
 OTA_SUPPORT=1
@@ -184,12 +184,17 @@ OTA_SUPPORT=1
 IoTConnect provides a signed URL that's valid for 5 minutes by default.
 Increasing this value will ensure that the URL does not expire before the download completes.
 * Update the chunk buffer to "uint8_t chunk_buffer[CY_OTA_CHUNK_SIZE + 1024]" at *mtb_shared/ota-update/\<version>/source/cy_ota_internal.h*.
-* If on AWS, please note that OTA support in currently work in progress.
-We have had some limited success with changes suggested the [OTA_AWS.md](OTA_AWS.md), but these modifications 
-to the Infineon's OTA library gave us inconsistent results.
+* If on AWS, please note that the changes below are needed in order to make OTA reliable.
+> Due to the AWS S3 signed URL size that we get from IoTConnect, we need to increase both
+  CY_OTA_HTTP_FILENAME_SIZE and CY_OTA_MQTT_FILENAME_BUFF_SIZE
+  (MQTT as well due to a bug where the wrong value is used for an HTTP related buffer size)
+  to 800 at *mtb_shared/ota-update/\<version>/include/cy_ota_api.h*
+>
+> Set the "CY_OTA_CHUNK_SIZE" at *mtb_shared/ota-update/\<version>/include/cy_ota_api.h* to (8 * 4096) or (16 * 4096) bytes.
 * If on Azure, you can achieve up to around four times reduction in download time 
 by increasing "CY_OTA_CHUNK_SIZE" at *mtb_shared/ota-update/\<version>/include/cy_ota_api.h* 
 up to 65536 bytes.
+* Comment out the line "#include "mbedtls/pk_internal.h" at *mtb_shared/avnet-iotc-mtb-sdk/\<version>/source/iotc_gencert.c*
 
 We need to build the *MCUboot-Based Basic Bootloader* application separately 
 and load it onto the board (only once).
