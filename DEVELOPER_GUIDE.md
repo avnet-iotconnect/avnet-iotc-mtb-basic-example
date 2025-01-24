@@ -186,8 +186,10 @@ IoTConnect provides a signed URL that's valid for 5 minutes by default.
 Increasing this value will ensure that the URL does not expire before the download completes.
 * Set the "CY_OTA_CHUNK_SIZE" at *mtb_shared/ota-update/\<version>/include/cy_ota_api.h* to (32 * 1024) or (64 * 1024) bytes.
 
-> If on AWS, please note that the changes below are needed in order to make OTA work.
-  Due to the AWS S3 signed URL size that we get from IoTConnect, we need to increase both
+> **Note:**
+> If on AWS, please note that the change below is needed in order to make OTA work.
+> 
+> Due to the AWS S3 signed URL size that we get from IoTConnect, we need to increase both
   CY_OTA_HTTP_FILENAME_SIZE and CY_OTA_MQTT_FILENAME_BUFF_SIZE
   (MQTT as well due to a bug where the wrong value is used for an HTTP related buffer size)
   to 800 at *mtb_shared/ota-update/\<version>/include/cy_ota_api.h*
