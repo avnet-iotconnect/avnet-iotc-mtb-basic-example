@@ -68,7 +68,7 @@
  * mbedtls_platform_gmtime_r() at compile-time by using the macro
  * MBEDTLS_PLATFORM_GMTIME_R_ALT.
  */
-#undef MBEDTLS_HAVE_TIME_DATE
+// #undef MBEDTLS_HAVE_TIME_DATE
 
 
 /**
@@ -571,7 +571,7 @@
  *
  * This module is the basis for creating X.509 certificates and CSRs.
  */
-#undef MBEDTLS_X509_CREATE_C
+//#undef MBEDTLS_X509_CREATE_C
 
 /**
  * \def MBEDTLS_X509_CSR_WRITE_C
@@ -597,7 +597,7 @@
  *
  * This module is required for X.509 certificate creation.
  */
-#undef MBEDTLS_X509_CRT_WRITE_C
+//#undef MBEDTLS_X509_CRT_WRITE_C
 
 /**
  * \def MBEDTLS_CERTS_C
