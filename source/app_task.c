@@ -60,7 +60,7 @@
 #include "iotc_ota.h"
 
 
-#define APP_VERSION "02.01.00"
+#define APP_VERSION "07.00.02"
 static bool is_demo_mode = false;
 
 static void on_connection_status(IotConnectConnectionStatus status) {
