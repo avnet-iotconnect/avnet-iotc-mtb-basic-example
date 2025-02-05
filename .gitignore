@@ -1,9 +1,7 @@
-# IDE Artifacts
+# IDE Artifacts and generated files
 .idea/
 /.settings/
-
-
-# Generated files
+/*.code-workspace
 /.mtbLaunchConfigs/
 
 # Flashmap generated when APP_OTA_SUPPORT is set in the makefile

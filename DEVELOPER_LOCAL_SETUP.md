@@ -1,34 +1,24 @@
 ## Development Setup with Git
 
-In order to develop this project with Git, you will need to clone this repo and do some additional steps:
+In order to develop this project with Git:
 - Clone this repo into a directory of your choosing.
 - Follow the steps of the main Developer Guide, but when on the Project Creator application selection screen,
-select **Browse for Application** and select the directory of your git repo that was cloned previously.
-- Checkmark your application that now appeared in the *Import* category instead of the application selected in the main guide,
-and continue following the main guide steps, but do not compile the application yet until you have done the Library Manager step below.
+select **Browse for Application** and browse to the location of this  git repo.
+- Checkmark your application that now appeared in the *Import* category.
+- It is usually beneficial to rename the application to a shorter string 
+to minimize potential of running into issues with long path names on Windows.
+- Continue following the main guide steps, but do not compile the application yet until you have done the Library Manager step below.
 - At this point, your originally cloned repo is no longer needed, so you may delete it at this time if you wish.
 Your repo clone will be copied into the directory you selected in the Project Creator and you can continue 
 to use this directory with Git.
-- At the time of writing this guide, there is an issue with Project Creator 2.20.4596 that you need to work around:
-  - After importing the application into Eclipse, run the Library Manager 
-  by selecting your application in the Project Explorer top left panel and then launching the Library Manager from the quick panel
-  at the top left of the IDE.
-  - Select the CYSBSYSKIT-DEV-01 BSP in the top of the list
-  - In the properties panel, choose the version corresponding tot the one specified in the BSP manifest 
-  of this repo - refer to [deps/TARGET_CYSBSYSKIT-DEV-01.mtb](deps/TARGET_CYSBSYSKIT-DEV-01.mtb)
-  - Click the *Update* button at the bottom of the screen.
-  - You may see an error *ERROR:"make eclipse" failed*, but the error does not seem to cause any issues.
-- Note that you can use Git with the SDK created in `mtb_shared/avnet-iotc-mtb-sdk/label`
+- Note that you can use Git with the SDK created in `mtb_shared/avnet-iotc-mtb-sdk/<label>`
 in the same way you would your application clone, with the exception that
-the remote normally called "origin" will be named "cypress". You can ignore the fact that the repo
-will be created under the directory named after the label or branch that is defined in the
-[deps/avnet-iotc-mtb-sdk.mtb](deps/avnet-iotc-mtb-sdk.mtb) is pointing to, and simply checkout your desired version.
-- Additionally, if you change the branch or label of the SDK at [deps/avnet-iotc-mtb-sdk.mtb](deps/avnet-iotc-mtb-sdk.mtb)
-with Library Manager a new directory will be created with the contents of that remote branch, so keep this in mind
-if any local SDK changes exist before making this change. 
-- **IMPORTANT:** Note that if you need to run the Library Manager or "make getlibs" after modifying the contents of theSDK,
-at the time of creating this guide, the process will **overwrite any changes** in the SDK directory.
-To ensure that you do not lose any changes, make a copy of the changes or commit them before doing either of these steps.
+the remote normally called "origin" will be named "cypress". This directory
+can be used to make changes to the SDK and commit them to the repo.
+
+> [!WARNING]
+> Make sure to commit and push any changes to the SDK before running library manager, or invoking `make getlibs`, as it will likely reload `mtb_shared/avnet-iotc-mtb-sdk/<label>` from the git repository.
+
 
 ## Local Manifest Setup
 

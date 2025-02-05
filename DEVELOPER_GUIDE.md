@@ -8,16 +8,20 @@ the [README.md](README.md).
 
 * GNU Arm® Embedded Compiler (GCC_ARM) - Default value of TOOLCHAIN
 
-The project has been tested with the Eclipse option in Project Creator.
+The instructions are based on Eclipse for simplicity of evaluation, however  
+our team mostly tests and develops with [VSCode](https://documentation.infineon.com/html/modustoolbox-software/en/latest/Modustoolbox/IDE_User_Guides/Visual_Studio_Code_for_ModusToolbox_User_Guide.html). 
+
+We recommend using VSCode for faster compilation, better debugging, 
+better intellisense and a more productive overall development experience. 
 
 ## Prerequisites
-* PC with Windows. The project is tested with Windows 10, though the setup should work with Linux or Mac as well.
+* PC with Windows. The project is tested with Windows 10 and 11, though the setup should work with Linux or Mac as well.
 * USB-A to micro-USB data cable
 * 2.4GHz WiFi Network
 * A serial terminal application such as [Tera Term](https://ttssh2.osdn.jp/index.html.en) or a browser-based application like [Google Chrome Labs Serial Terminal](https://googlechromelabs.github.io/serial-terminal/)
 * A registered [myInfineon Account](https://www.infineon.com/sec/login)
 
-For OTA Support, you must use this application with ModusToolbox&trade; 3.2. 
+For OTA Support, you must use this application with ModusToolbox&trade; 3.2 or later. 
 
 ## Hardware Setup
 * Connect the board to a USB port on your PC. A new USB device should be detected.
@@ -33,27 +37,26 @@ Firmware logs will be available on that COM port.
 ## Building the Software
 
 > [!NOTE]
-> If you wish to contribute to this project or work with your own git fork,
+> If you wish to contribute to this project, work with your own git fork,
 > or evaluate an application version that is not yet released, the setup steps will change 
 > the setup steps slightly.
 > In that case, read [DEVELOPER_LOCAL_SETUP.md](./DEVELOPER_LOCAL_SETUP.md) 
 > before continuing to the steps below.
-> 
 > Follow the [Contributing Guidelines](https://github.com/avnet-iotconnect/iotc-c-lib/blob/master/CONTRIBUTING.md) 
 > if you are contributing to this project.
 
 - Download, install [ModusToolbox&trade; software](https://www.infineon.com/cms/en/design-support/tools/sdk/modustoolbox-software/)
-version 3.2 or later. Install the development suite with Modus Toolbox&trade; Setup. 
+version 3.2 or later (3.3 recommended). Install the development suite with Modus Toolbox&trade; Setup. 
 Ensure that *Modus Toolbox&trade; Tools Package* and *Modus Toolbox&trade; Programming tools* are selected during setup. 
 The setup tool may require you to log into your Infineon account.
 - Open the Project Creator.
 - Select one of the supported boards from [README.md](README.md) and click *Next*.
 - At the top of the window, choose a path where the project will be installed.
 On Windows, ensure that this path is *short* starting from a root of a drive like *C:\iotc-basic*,
-or else ong paths will trigger the 256 Windows path limit and cause compiling errors. Refer to the
+or else ong paths may trigger the 256 Windows path limit and cause compiling errors. Refer to the
 [Troubleshooting](#troubleshooting) section of this document for more information.
 - Select *Eclipse IDE for Modus Toolbox&trade;* in the pulldown below the installation path. 
-VsCode integration and other tools may work, but actively tested and not a part of this guide.
+VsCode integration will work as well, but steps are not provided as a part of this guide.
 - Select the *Avnet IoTConnect Basic Example* from the *Wi-Fi* Category.
 - Click the *Create* button at the bottom of the screen.
 - Open the installed Eclipse IDE For Modus Toolbox&trade; application.
@@ -154,6 +157,8 @@ At this point, the device can be reprogrammed with the newly built firmware.
 
 This project supports IoTConnect OTA via the ota-update library with the CY8CPROTO-062-4343W board.
 
+We recommend using Eclipse, rather than VSCode for this setup.
+
 The port of the OTA feature is rudimentary for purpose demonstration and not recommended for production. 
 If you wish to support the OTA functionality for your board, please learn more from the README of the
 [mtb-example-ota-https](https://github.com/Infineon/mtb-example-ota-https) sample.
@@ -161,10 +166,17 @@ If you wish to support the OTA functionality for your board, please learn more f
 In order to add ioTConnect OTA support to this project, 
 do the following steps only once, **in this specific order**, once you have opened this project in Eclipse:
 
-* Select this application in the top left panel and open the Library Manager from the bottom left Quick Panel. 
+* Install these python3 modules into your default python3 installation:
+
+```
+pip3 install click cryptography cbor intelhex
+```
+
+* In Eclipse, Select this application in the top left panel and open the Library Manager from the bottom left Quick Panel. 
 Note that the library manager may take some time appear in the quick panel.
-* Clik the *Add Library* button and add **ota-update** version *release-v4.2.0* 
- and **ota-bootloader-abstraction** version *release-v1.2.0* libraries.
+* Clik the *Add Library* button and add **ota-update** version *release-v4.3.3* 
+ and **ota-bootloader-abstraction** version *release-v1.5.2* libraries.
+* Click the **Update** button the application and close the library manager.
 * Locate the `OTA_SUPPORT=0` line in the Makefile and set OTA_SUPPORT to 1:
 ```makefile
 OTA_SUPPORT=1
@@ -177,28 +189,26 @@ OTA_SUPPORT=1
   * If you cloned this project's repo or have your own repository, this part of the setup can be streamlined by simply
   renaming the templates-ota directory to ``templates`` before the project is imported with Project Creator. 
 
+[!Note]
 > The modifications from templates-ota directory are not compatible with OTA_SUPPORT being disabled, so if you need to 
 > switch to OTA_SUPPORT=0, it is recommended that you re-create this project with the Project Creator.
+* 
 * Log into your IoTConnect account and ensure that the toggle for Settings -> Configurations -> Firmware configurations is enabled.
+
 * Click on *Firmware configurations* and ensure that the *OTA URL Expiry* is set to at least 25 (minutes).
 IoTConnect provides a signed URL that's valid for 5 minutes by default.
 Increasing this value will ensure that the URL does not expire before the download completes.
-* Update the chunk buffer to "uint8_t chunk_buffer[CY_OTA_CHUNK_SIZE + 1024]" at *mtb_shared/ota-update/\<version>/source/cy_ota_internal.h*.
-* If on AWS, please note that OTA support in currently work in progress.
-We have had some limited success with changes suggested the [OTA_AWS.md](OTA_AWS.md), but these modifications 
-to the Infineon's OTA library gave us inconsistent results.
-* If on Azure, you can achieve up to around four times reduction in download time 
-by increasing "CY_OTA_CHUNK_SIZE" at *mtb_shared/ota-update/\<version>/include/cy_ota_api.h* 
-up to 65536 bytes.
+* Set the "CY_OTA_CHUNK_SIZE" at *mtb_shared/ota-update/\<version>/include/cy_ota_api.h* to (32 * 1024) or (64 * 1024) bytes.
+* If on AWS, both CY_OTA_HTTP_FILENAME_SIZE and CY_OTA_MQTT_FILENAME_BUFF_SIZE
+need to be set to 600 at *mtb_shared/ota-update/\<version>/include/cy_ota_api.h*
 
 We need to build the *MCUboot-Based Basic Bootloader* application separately 
 and load it onto the board (only once).
-The following steps are compatible with the bootloader sample application version *release-7.0.0*
-and if any issues are encountered, you should clone 
-the [mtb-example-mcuboot-basic](https://github.com/Infineon/mtb-example-mcuboot-basic/tree/release-v7.0.0) 
-release-v7.0.0 tag of the application and use the steps similar to the [DEVELOPER_LOCAL_SETUP.md](DEVELOPER_LOCAL_SETUP.md)
+At the time of writing bootloader sample application version *release-7.5.0*
+used directly from Project Creator available online applications. In case of the latest release being incompatible, 
+the [mtb-example-mcuboot-basic](https://github.com/Infineon/mtb-example-mcuboot-basic/tree/release-v7.5.0) 
+release-v7.5.0 tag of the application can be used explictily the steps similar to the [DEVELOPER_LOCAL_SETUP.md](DEVELOPER_LOCAL_SETUP.md)
 to import the local project with Project Creator.
-
 * Use the Project Creator to import the *MCUboot-Based Basic Bootloader* application into a separate workspace/directory.
 * Copy the *psoc62_2m_ext_swap_single.json* flashmap JSON file from this project in the [flashmap](flashmap) directory into the \<MCUboot>/flashmap director.
 * Modify the value of the FLASH_MAP variable in the \<MCUboot>/user_config.mk file to use *psoc62_2m_ext_swap_single.json*
@@ -207,5 +217,9 @@ to import the local project with Project Creator.
 The terminal should be in the MCUboot-Based_Basic_Bootloader/bootloader_app directory.
 * From the terminal, execute the `make program_proj` command to build and program the MCUboot-based bootloader application.
 
-You can now build and upload the basic example application. 
-If this is done correctly, when starting up the board you should see the bootloader messages followed by the application startup messages. 
+You can now build and upload the basic example application.  
+If this is done correctly, when starting up the board you should see 
+the bootloader messages followed by the application startup messages.
+
+When testing OTA, use the iotc-modustoolbox-example.bin located 
+at directory *build/APP_CY8CPROTO-062-4343W/Debug/*, for example when the 062-4343W board is used.
