@@ -6,6 +6,11 @@ The project uses the following dependent projects:
 * [avnet-iotc-mtb-sdk](https://github.com/avnet-iotconnect/avnet-iotc-mtb-sdk)
 
 ## Supported Toolchains (make variable 'TOOLCHAIN')
+> [!IMPORTANT]
+> As of 8/8/2025 the older version v7.0.2 of this application and older will not work with any MTB Tools versions 
+> Due to a problem with incompatibility with retarget-io and the latest BSP.
+> Please use v7.1.0 and later versions.
+
 * GNU Arm® Embedded Compiler (GCC_ARM) - Default value of TOOLCHAIN
 
 ## Supported Boards
