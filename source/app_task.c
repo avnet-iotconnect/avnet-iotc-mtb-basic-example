@@ -305,10 +305,16 @@ void app_task(void *pvParameters) {
     // feel free to modify the application to use these bytes
     //uint32_t hwuidlo = (uint32_t)(hwuid & 0xFFFFFFFF);
 
-    char iotc_duid[IOTCL_CONFIG_DUID_MAX_LEN];
-	sprintf(iotc_duid, IOTCONNECT_DUID_PREFIX"%08lx", hwuidhi);
-
-    printf("Generated device unique ID (DUID) is: %s\n", iotc_duid);
+    char iotc_duid[IOTCL_CONFIG_DUID_MAX_LEN] = IOTCONNECT_DUID;
+    if (0 == strlen(iotc_duid)) {
+        uint64_t hwuid = Cy_SysLib_GetUniqueId();
+        uint32_t hwuidhi = (uint32_t)(hwuid >> 32);
+        // not using low bytes in the name because they appear to be the same across all boards of the same type
+        // feel free to modify the application to use these bytes
+        // uint32_t hwuidlo = (uint32_t)(hwuid & 0xFFFFFFFF);
+        sprintf(iotc_duid, IOTCONNECT_DUID_PREFIX"%08lx", (unsigned long) hwuidhi);
+        printf("Generated device unique ID (DUID) is: %s\n", iotc_duid);
+    }
 
     IotConnectClientConfig config;
     iotconnect_sdk_init_config(&config);
